@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { todayStr, toMin, overlaps, pad } from '../../utils/datetime'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { BookingInput } from '../../store/useStore'
 
 interface BookingModalProps {
@@ -15,6 +16,7 @@ interface BookingModalProps {
 
 export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, onClose, onSuccess, onError }: BookingModalProps) {
   const { rooms, bookings, addBooking } = useStore()
+  const trapRef = useFocusTrap<HTMLDivElement>()
 
   const [form, setForm] = useState<BookingInput>({
     roomId: defaultRoomId ?? rooms[0]?.id ?? '',
@@ -66,13 +68,19 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
       onClick={onClose}
     >
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-modal-title"
         className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <h3 className="font-bold">แบบฟอร์มขอจองห้อง</h3>
+          <h3 id="booking-modal-title" className="font-bold">แบบฟอร์มขอจองห้อง</h3>
           <button
             onClick={onClose}
+            aria-label="ปิด"
             className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />

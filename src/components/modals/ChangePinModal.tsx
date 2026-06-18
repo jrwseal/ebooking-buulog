@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, KeyRound } from 'lucide-react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface ChangePinModalProps {
   onClose: () => void
@@ -9,6 +10,7 @@ interface ChangePinModalProps {
 export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProps) {
   const [cur, setCur] = useState('')
   const [next, setNext] = useState('')
+  const trapRef = useFocusTrap<HTMLDivElement>()
 
   return (
     <div
@@ -16,15 +18,21 @@ export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProp
       onClick={onClose}
     >
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="change-pin-title"
         className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <h3 className="font-bold flex items-center gap-2">
+          <h3 id="change-pin-title" className="font-bold flex items-center gap-2">
             <KeyRound size={16} className="text-[#1b3a6b]" /> เปลี่ยนรหัสผ่าน
           </h3>
           <button
             onClick={onClose}
+            aria-label="ปิด"
             className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />

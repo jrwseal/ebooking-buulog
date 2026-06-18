@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { X, Check, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { thaiFull, overlaps } from '../../utils/datetime'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { Booking, Status } from '../../types'
 
 interface ApprovalQueueProps {
@@ -11,6 +12,7 @@ interface ApprovalQueueProps {
 
 export default function ApprovalQueue({ onClose, onDecide }: ApprovalQueueProps) {
   const { rooms, bookings } = useStore()
+  const trapRef = useFocusTrap<HTMLDivElement>()
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? id
 
   const pending = useMemo(
@@ -27,13 +29,19 @@ export default function ApprovalQueue({ onClose, onDecide }: ApprovalQueueProps)
       onClick={onClose}
     >
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="approval-queue-title"
         className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <h3 className="font-bold">คำขอรออนุมัติ ({pending.length})</h3>
+          <h3 id="approval-queue-title" className="font-bold">คำขอรออนุมัติ ({pending.length})</h3>
           <button
             onClick={onClose}
+            aria-label="ปิด"
             className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />

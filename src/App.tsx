@@ -5,6 +5,7 @@ import {
   CheckCircle2, Hourglass, MapPin, X,
   ClipboardCheck, RotateCcw, Trash2, DoorOpen,
 } from 'lucide-react'
+import { useFocusTrap } from './hooks/useFocusTrap'
 import { useStore } from './store/useStore'
 import MonthView from './components/views/MonthView'
 import WeekView from './components/views/WeekView'
@@ -46,7 +47,6 @@ export default function App() {
   const [pinModal, setPinModal] = useState(false)
   const [showRoomManager, setShowRoomManager] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
-  const [pinInput, setPinInput] = useState('')
 
   useEffect(() => {
     void fetchRooms()
@@ -81,12 +81,11 @@ export default function App() {
     setRole(r)
   }
 
-  function tryLogin() {
-    if (pinInput === pin) {
+  function tryLogin(input: string) {
+    if (input === pin) {
       setAuthed(true)
       setRole('approver')
       setLoginOpen(false)
-      setPinInput('')
       flash('เข้าสู่ระบบผู้อนุมัติแล้ว')
     } else {
       flash('รหัสผ่านไม่ถูกต้อง', 'error')
@@ -251,7 +250,7 @@ export default function App() {
 
         {/* Tab bar + admin toolbar */}
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
+          <div role="tablist" aria-label="มุมมองตาราง" className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
             <ToolTab active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} />} label="วัน" />
             <ToolTab active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} />} label="สัปดาห์" />
             <ToolTab active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} />} label="เดือน" />
@@ -403,51 +402,10 @@ export default function App() {
 
       {/* Admin login modal */}
       {loginOpen && (
-        <div
-          className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-slate-900/40 p-0 sm:p-4"
-          onClick={() => setLoginOpen(false)}
-        >
-          <div
-            className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-              <h3 className="font-bold">เข้าสู่ระบบผู้อนุมัติ</h3>
-              <button
-                onClick={() => setLoginOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-4 space-y-3">
-              <p className="text-sm text-slate-500 flex items-center gap-2">
-                <Lock size={15} className="text-[#1b3a6b]" /> เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้น
-              </p>
-              <label className="block">
-                <span className="block text-xs font-medium text-slate-500 mb-1">รหัสผ่าน</span>
-                <input
-                  type="password"
-                  value={pinInput}
-                  autoFocus
-                  onChange={(e) => setPinInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && tryLogin()}
-                  placeholder="กรอกรหัสผ่าน"
-                  className="input"
-                />
-              </label>
-              <button
-                onClick={tryLogin}
-                className="w-full py-2.5 rounded-lg bg-[#1b3a6b] text-white font-semibold hover:bg-[#122a52]"
-              >
-                เข้าสู่ระบบ
-              </button>
-              <p className="text-xs text-slate-400">
-                รหัสเริ่มต้น: <span className="font-mono font-semibold">123456</span>
-              </p>
-            </div>
-          </div>
-        </div>
+        <LoginModal
+          onClose={() => setLoginOpen(false)}
+          onSubmit={tryLogin}
+        />
       )}
 
       {/* Toast */}
@@ -460,6 +418,11 @@ export default function App() {
           {toast.msg}
         </div>
       )}
+
+      {/* Screen-reader announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {toast?.msg}
+      </div>
     </div>
   )
 }
@@ -487,6 +450,7 @@ function RoomFilterBtn({ active, onClick, label }: { active: boolean; onClick: (
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       className={`flex-shrink-0 text-sm px-3 py-1.5 rounded-full border font-medium transition ${
         active
           ? 'bg-[#1b3a6b] text-white border-[#1b3a6b]'
@@ -508,6 +472,8 @@ function ToolTab({
 }) {
   return (
     <button
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition ${
         active ? 'bg-[#1b3a6b] text-white' : 'text-slate-500 hover:text-slate-700'
@@ -515,5 +481,63 @@ function ToolTab({
     >
       {icon} {label}
     </button>
+  )
+}
+
+function LoginModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (pin: string) => void }) {
+  const [input, setInput] = useState('')
+  const trapRef = useFocusTrap<HTMLDivElement>()
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-slate-900/40 p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
+        className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+          <h3 id="login-modal-title" className="font-bold">เข้าสู่ระบบผู้อนุมัติ</h3>
+          <button
+            onClick={onClose}
+            aria-label="ปิด"
+            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-4 space-y-3">
+          <p className="text-sm text-slate-500 flex items-center gap-2">
+            <Lock size={15} className="text-[#1b3a6b]" /> เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้น
+          </p>
+          <label className="block">
+            <span className="block text-xs font-medium text-slate-500 mb-1">รหัสผ่าน</span>
+            <input
+              type="password"
+              value={input}
+              autoFocus
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onSubmit(input)}
+              placeholder="กรอกรหัสผ่าน"
+              className="input"
+            />
+          </label>
+          <button
+            onClick={() => onSubmit(input)}
+            className="w-full py-2.5 rounded-lg bg-[#1b3a6b] text-white font-semibold hover:bg-[#122a52]"
+          >
+            เข้าสู่ระบบ
+          </button>
+          <p className="text-xs text-slate-400">
+            รหัสเริ่มต้น: <span className="font-mono font-semibold">123456</span>
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }

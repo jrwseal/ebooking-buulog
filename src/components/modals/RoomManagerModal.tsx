@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Plus, Trash2, AlertCircle } from 'lucide-react'
 import { useStore } from '../../store/useStore'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { Room } from '../../types'
 
 const ROOM_TYPES = ['บรรยาย', 'สัมมนา', 'แล็บ', 'ปฏิบัติการ', 'ประชุม']
@@ -9,6 +10,7 @@ const EMPTY: Omit<Room, never> = { id: '', name: '', type: 'บรรยาย',
 
 export default function RoomManagerModal({ onClose }: { onClose(): void }) {
   const { rooms, addRoom, removeRoom } = useStore()
+  const trapRef = useFocusTrap<HTMLDivElement>()
   const [form, setForm] = useState(EMPTY)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -54,14 +56,20 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
       onClick={onClose}
     >
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="room-manager-title"
         className="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
-          <h3 className="font-bold">จัดการห้อง</h3>
+          <h3 id="room-manager-title" className="font-bold">จัดการห้อง</h3>
           <button
             onClick={onClose}
+            aria-label="ปิด"
             className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />

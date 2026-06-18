@@ -117,6 +117,16 @@ export default function ScheduleGrid({ columns, showRoom, maskDetails = false, o
                   onCreate(col.dateStr, col.roomId, hour)
                 }}
               >
+                {/* Keyboard-accessible booking buttons per hour (screen-reader visible) */}
+                {HOURS.slice(0, -1).map((h) => (
+                  <button
+                    key={h}
+                    className="sr-only focus:not-sr-only focus:absolute focus:z-20 focus:left-1 focus:bg-white focus:text-[#1b3a6b] focus:text-[10px] focus:rounded focus:px-1 focus:py-0.5 focus:shadow"
+                    style={{ top: (h - START_H) * HOUR_H }}
+                    onClick={(e) => { e.stopPropagation(); onCreate(col.dateStr, col.roomId, h) }}
+                    aria-label={`จอง ${pad(h)}:00`}
+                  />
+                ))}
                 {/* Hour grid lines */}
                 {HOURS.map((h, i) => (
                   <div
