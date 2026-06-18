@@ -14,6 +14,7 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
   const [form, setForm] = useState(EMPTY)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
   function setField<K extends keyof Room>(k: K, v: Room[K]) {
     setForm((f) => ({ ...f, [k]: v }))
@@ -38,8 +39,9 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
     }
   }
 
-  async function handleRemove(id: string, name: string) {
-    if (!window.confirm(`ลบ "${name}"?\nการจองที่อ้างถึงห้องนี้อาจได้รับผลกระทบ`)) return
+  async function handleRemove(id: string) {
+    if (deleteConfirmId !== id) { setDeleteConfirmId(id); return }
+    setDeleteConfirmId(null)
     setBusy(true)
     try {
       await removeRoom(id)
@@ -87,13 +89,31 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
                 <span className="font-mono text-xs text-slate-400 shrink-0 w-20">{r.id}</span>
                 <span className="text-sm font-medium flex-1 min-w-0 truncate">{r.name}</span>
                 <span className="text-xs text-slate-400 shrink-0">{r.type} · {r.capacity} ที่นั่ง</span>
-                <button
-                  onClick={() => void handleRemove(r.id, r.name)}
-                  disabled={busy}
-                  className="w-9 h-9 flex items-center justify-center rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-30"
-                >
-                  <Trash2 size={14} />
-                </button>
+                {deleteConfirmId === r.id ? (
+                  <div className="flex items-center gap-2 shrink-0 text-xs">
+                    <button
+                      onClick={() => void handleRemove(r.id)}
+                      className="font-medium text-rose-600 hover:underline"
+                    >
+                      ลบ
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirmId(null)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      ยกเลิก
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => void handleRemove(r.id)}
+                    disabled={busy}
+                    aria-label={`ลบ ${r.name}`}
+                    className="w-9 h-9 flex items-center justify-center rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 focus:opacity-100 disabled:opacity-30"
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                  </button>
+                )}
               </div>
             ))}
             {rooms.length === 0 && (
@@ -154,7 +174,7 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
 
             {err && (
               <p className="flex items-center gap-1.5 text-sm text-rose-600">
-                <AlertCircle size={14} /> {err}
+                <AlertCircle size={14} aria-hidden="true" /> {err}
               </p>
             )}
 
@@ -163,7 +183,7 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
               disabled={busy}
               className="flex items-center gap-1.5 w-full justify-center py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-50 transition"
             >
-              <Plus size={16} /> เพิ่มห้อง
+              <Plus size={16} aria-hidden="true" /> เพิ่มห้อง
             </button>
           </div>
         </div>

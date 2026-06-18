@@ -116,21 +116,22 @@ function ApprovalCard({
       <input
         value={note}
         onChange={(e) => setNote(e.target.value)}
+        aria-label="หมายเหตุ"
         placeholder="หมายเหตุ (ไม่บังคับ)"
         className="input mt-2 text-xs"
       />
       <div className="flex gap-2 mt-2">
         <button
           onClick={() => onApprove(note)}
-          className="flex-1 text-sm font-medium py-2 rounded-md bg-green-600 text-white hover:bg-green-700 flex items-center justify-center gap-1"
+          className="flex-1 text-sm font-medium py-2 min-h-[44px] rounded-md bg-green-600 text-white hover:bg-green-700 flex items-center justify-center gap-1"
         >
-          <Check size={15} /> อนุมัติ
+          <Check size={15} aria-hidden="true" /> อนุมัติ
         </button>
         <button
           onClick={() => onReject(note)}
-          className="flex-1 text-sm font-medium py-2 rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 flex items-center justify-center gap-1"
+          className="flex-1 text-sm font-medium py-2 min-h-[44px] rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 flex items-center justify-center gap-1"
         >
-          <X size={15} /> ปฏิเสธ
+          <X size={15} aria-hidden="true" /> ปฏิเสธ
         </button>
       </div>
     </div>

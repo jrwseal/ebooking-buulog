@@ -108,7 +108,7 @@ export default function ScheduleGrid({ columns, showRoom, maskDetails = false, o
 
               {/* Column body */}
               <div
-                className="relative cursor-copy"
+                className="relative cursor-copy overflow-hidden"
                 style={{ height: BODY_H }}
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect()
@@ -155,11 +155,12 @@ export default function ScheduleGrid({ columns, showRoom, maskDetails = false, o
                   return (
                     <button
                       key={b.id}
+                      aria-label={`${maskDetails ? 'จองแล้ว' : b.title} · ${b.start}–${b.end}`}
                       onClick={(e) => {
                         e.stopPropagation()
                         onSelect(b)
                       }}
-                      className={`absolute rounded border px-1 py-0.5 text-left overflow-hidden hover:brightness-95 transition-[filter] ${STATUS[b.status].chip}`}
+                      className={`absolute rounded border px-1 py-0.5 text-left overflow-hidden hover:brightness-95 transition-[filter] min-h-[44px] sm:min-h-0 ${STATUS[b.status].chip}`}
                       style={{
                         top,
                         height: h,

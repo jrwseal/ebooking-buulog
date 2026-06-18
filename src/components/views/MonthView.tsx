@@ -54,8 +54,8 @@ export default function MonthView({
             {TH_MONTHS[cursor.getMonth()]} {cursor.getFullYear() + 543}
           </h2>
           <div className="flex items-center gap-1">
-            <NavBtn onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
-              <ChevronLeft size={18} />
+            <NavBtn aria-label="เดือนก่อน" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
+              <ChevronLeft size={18} aria-hidden="true" />
             </NavBtn>
             <button
               onClick={() => { setCursor(new Date()); setSelectedDate(todayStr) }}
@@ -63,8 +63,8 @@ export default function MonthView({
             >
               วันนี้
             </button>
-            <NavBtn onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
-              <ChevronRight size={18} />
+            <NavBtn aria-label="เดือนถัดไป" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
+              <ChevronRight size={18} aria-hidden="true" />
             </NavBtn>
           </div>
         </div>
@@ -91,8 +91,9 @@ export default function MonthView({
             return (
               <button
                 key={i}
+                aria-label={`${thaiFull(ds)}${items.length > 0 ? ` · ${items.length} รายการ` : ''}`}
+                aria-current={isSel ? 'date' : undefined}
                 onClick={() => setSelectedDate(ds)}
-                onDoubleClick={() => { setSelectedDate(ds); onSwitchToDayView() }}
                 className={[
                   'min-h-[78px] sm:min-h-[92px] text-left p-1.5 border-b border-r border-slate-100 transition',
                   inMonth ? '' : 'bg-slate-50/60',
@@ -150,8 +151,14 @@ export default function MonthView({
       {/* Day detail sidebar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <CalendarDays size={18} className="text-buu" />
+          <CalendarDays size={18} className="text-buu" aria-hidden="true" />
           <h3 className="font-bold">{thaiFull(selectedDate)}</h3>
+          <button
+            onClick={onSwitchToDayView}
+            className="ml-auto text-xs text-buu font-medium hover:underline"
+          >
+            ดูตาราง
+          </button>
         </div>
 
         {dayList.length === 0 ? (
@@ -185,10 +192,11 @@ export default function MonthView({
   )
 }
 
-function NavBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function NavBtn({ onClick, children, 'aria-label': ariaLabel }: { onClick: () => void; children: React.ReactNode; 'aria-label'?: string }) {
   return (
     <button
       onClick={onClick}
+      aria-label={ariaLabel}
       className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-600"
     >
       {children}

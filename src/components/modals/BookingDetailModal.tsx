@@ -22,6 +22,7 @@ export default function BookingDetailModal({
 }: BookingDetailModalProps) {
   const { rooms, bookings } = useStore()
   const [note, setNote] = useState(b.reviewNote || '')
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
   const trapRef = useFocusTrap<HTMLDivElement>()
 
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? id
@@ -48,8 +49,6 @@ export default function BookingDetailModal({
   }
 
   function handleRemove() {
-    const label = role === 'approver' ? 'ลบรายการนี้' : 'ยกเลิกคำขอนี้'
-    if (!window.confirm(`${label}? ย้อนกลับไม่ได้`)) return
     onRemove(b.id)
     onClose()
   }
@@ -145,15 +144,15 @@ export default function BookingDetailModal({
               <div className="flex gap-2">
                 <button
                   onClick={() => handleDecide('approved')}
-                  className="flex-1 text-sm font-medium py-2 rounded-md bg-green-600 text-white hover:bg-green-700 flex items-center justify-center gap-1"
+                  className="flex-1 text-sm font-medium py-2 min-h-[44px] rounded-md bg-green-600 text-white hover:bg-green-700 flex items-center justify-center gap-1"
                 >
-                  <Check size={15} /> อนุมัติ
+                  <Check size={15} aria-hidden="true" /> อนุมัติ
                 </button>
                 <button
                   onClick={() => handleDecide('rejected')}
-                  className="flex-1 text-sm font-medium py-2 rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 flex items-center justify-center gap-1"
+                  className="flex-1 text-sm font-medium py-2 min-h-[44px] rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 flex items-center justify-center gap-1"
                 >
-                  <X size={15} /> ปฏิเสธ
+                  <X size={15} aria-hidden="true" /> ปฏิเสธ
                 </button>
               </div>
             </div>
@@ -161,13 +160,33 @@ export default function BookingDetailModal({
 
           {/* Delete / cancel */}
           {canDelete && (
-            <button
-              onClick={handleRemove}
-              className="text-xs text-slate-400 hover:text-rose-600 mt-1 flex items-center gap-1 transition"
-            >
-              <Trash2 size={13} />
-              {role === 'approver' ? 'ลบรายการ' : 'ยกเลิกคำขอนี้'}
-            </button>
+            deleteConfirm ? (
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-rose-600">
+                  {role === 'approver' ? 'ลบรายการนี้?' : 'ยกเลิกคำขอนี้?'}
+                </span>
+                <button
+                  onClick={handleRemove}
+                  className="text-xs font-medium text-rose-600 hover:underline"
+                >
+                  ยืนยัน
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(false)}
+                  className="text-xs text-slate-400 hover:text-slate-600"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="text-xs text-slate-400 hover:text-rose-600 mt-1 flex items-center gap-1 transition"
+              >
+                <Trash2 size={13} aria-hidden="true" />
+                {role === 'approver' ? 'ลบรายการ' : 'ยกเลิกคำขอนี้'}
+              </button>
+            )
           )}
         </div>
       </div>

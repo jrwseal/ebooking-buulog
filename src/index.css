@@ -16,6 +16,11 @@ html {
   font-family: var(--font-sans);
 }
 
+@keyframes slide {
+  0% { transform: translateX(-200%) }
+  100% { transform: translateX(300%) }
+}
+
 /* Keyboard focus ring */
 :focus-visible {
   outline: 2px solid var(--color-buu);
@@ -33,12 +38,12 @@ html {
 
 .input {
   width: 100%;
-  border: 1px solid #e2e8f0;
+  border: 1px solid oklch(91% 0.006 253);
   border-radius: .5rem;
   padding: .5rem .65rem;
   font-size: .875rem;
   outline: none;
-  background: #fff;
+  background: oklch(99% 0.002 253);
 }
 .input:focus {
   border-color: var(--color-buu);

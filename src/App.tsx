@@ -37,6 +37,7 @@ export default function App() {
   const [roomFilter, setRoomFilter] = useState('all')
   const [toast, setToast] = useState<ToastState | null>(null)
 
+  const [clearConfirm, setClearConfirm] = useState(false)
   const [showBooking, setShowBooking] = useState(false)
   const [bookingDefaultDate, setBookingDefaultDate] = useState(todayStr)
   const [bookingDefaultRoomId, setBookingDefaultRoomId] = useState<string | null>(null)
@@ -129,9 +130,9 @@ export default function App() {
   }
 
   async function handleClearAll() {
-    if (!window.confirm('ล้างข้อมูลการจองทั้งหมด? ย้อนกลับไม่ได้')) return
     try {
       await clearBookings()
+      setClearConfirm(false)
       flash('ล้างข้อมูลแล้ว')
     } catch {
       flash('ล้างไม่สำเร็จ ลองอีกครั้ง', 'error')
@@ -178,6 +179,8 @@ export default function App() {
             <img
               src="/buulog.png"
               alt="คณะโลจิสติกส์ มหาวิทยาลัยบูรพา"
+              width="40"
+              height="40"
               className="h-10 w-auto object-contain"
             />
             <div className="border-l border-white/25 pl-3">
@@ -227,7 +230,7 @@ export default function App() {
       {/* ── Main ── */}
       <main className="max-w-6xl mx-auto px-4 py-5">
         {/* Stats bar */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
           <StatCard
             icon={<CheckCircle2 size={18} />}
             value={stats.approved}
@@ -250,20 +253,30 @@ export default function App() {
 
         {/* Tab bar + admin toolbar */}
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <div role="tablist" aria-label="มุมมองตาราง" className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
-            <ToolTab active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} />} label="วัน" />
-            <ToolTab active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} />} label="สัปดาห์" />
-            <ToolTab active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} />} label="เดือน" />
-            <ToolTab active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} />} label="รายการ" />
+          <div
+            role="tablist"
+            aria-label="มุมมองตาราง"
+            className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5"
+            onKeyDown={(e) => {
+              const modes: ViewMode[] = ['day', 'week', 'month', 'agenda']
+              const i = modes.indexOf(view)
+              if (e.key === 'ArrowRight') { e.preventDefault(); setView(modes[(i + 1) % modes.length]) }
+              else if (e.key === 'ArrowLeft') { e.preventDefault(); setView(modes[(i + 3) % modes.length]) }
+            }}
+          >
+            <ToolTab id="tab-day" controls="panel-day" active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} aria-hidden="true" />} label="วัน" />
+            <ToolTab id="tab-week" controls="panel-week" active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} aria-hidden="true" />} label="สัปดาห์" />
+            <ToolTab id="tab-month" controls="panel-month" active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} aria-hidden="true" />} label="เดือน" />
+            <ToolTab id="tab-agenda" controls="panel-agenda" active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} aria-hidden="true" />} label="รายการ" />
           </div>
 
           {role === 'approver' && authed && (
             <>
               <button
                 onClick={() => setShowApprovals(true)}
-                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
               >
-                <ClipboardCheck size={16} /> คำขอรออนุมัติ
+                <ClipboardCheck size={16} aria-hidden="true" /> คำขอรออนุมัติ
                 {pending.length > 0 && (
                   <span className="ml-0.5 bg-amber-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">
                     {pending.length}
@@ -272,15 +285,15 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowRoomManager(true)}
-                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
               >
-                <DoorOpen size={16} /> ห้อง
+                <DoorOpen size={16} aria-hidden="true" /> ห้อง
               </button>
               <button
                 onClick={() => setPinModal(true)}
-                className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-slate-600 transition"
+                className="flex items-center gap-1.5 text-sm px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-slate-600 transition"
               >
-                <KeyRound size={15} /> รหัสผ่าน
+                <KeyRound size={15} aria-hidden="true" /> รหัสผ่าน
               </button>
             </>
           )}
@@ -288,21 +301,39 @@ export default function App() {
 
 
           {role === 'approver' && authed && (
-            <button
-              onClick={() => void handleClearAll()}
-              className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg text-slate-400 hover:text-rose-600 transition ml-auto"
-            >
-              <Trash2 size={15} /> ล้างข้อมูล
-            </button>
+            clearConfirm ? (
+              <div className="flex items-center gap-1.5 ml-auto">
+                <span className="text-xs text-slate-500">ล้างทั้งหมด?</span>
+                <button
+                  onClick={() => void handleClearAll()}
+                  className="text-xs font-medium px-2.5 py-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition"
+                >
+                  ยืนยัน
+                </button>
+                <button
+                  onClick={() => setClearConfirm(false)}
+                  className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
+                >
+                  ยกเลิก
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setClearConfirm(true)}
+                className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg text-slate-400 hover:text-rose-600 transition ml-auto"
+              >
+                <Trash2 size={15} aria-hidden="true" /> ล้างข้อมูล
+              </button>
+            )
           )}
         </div>
 
         {/* Room filter */}
-        <div className="relative inline-flex items-center mb-3">
+        <div className="relative inline-flex items-center min-h-[44px] mb-3">
           <select
             value={roomFilter}
             onChange={(e) => setRoomFilter(e.target.value)}
-            className="appearance-none text-sm font-medium text-slate-600 bg-transparent pr-5 cursor-pointer outline-none hover:text-slate-900 transition"
+            className="appearance-none text-sm font-medium text-slate-600 bg-transparent pr-5 py-2 cursor-pointer outline-none hover:text-slate-900 transition"
           >
             <option value="all">ทุกห้อง</option>
             {rooms.map((r) => (
@@ -314,39 +345,47 @@ export default function App() {
 
         {/* Views */}
         {view === 'month' && (
-          <MonthView
-            cursor={cursor}
-            setCursor={setCursor}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            role={role}
-            roomFilter={roomFilter}
-            onSwitchToDayView={() => setView('day')}
-            onBookRoom={openBooking}
-          />
+          <div id="panel-month" role="tabpanel" aria-labelledby="tab-month">
+            <MonthView
+              cursor={cursor}
+              setCursor={setCursor}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              role={role}
+              roomFilter={roomFilter}
+              onSwitchToDayView={() => setView('day')}
+              onBookRoom={openBooking}
+            />
+          </div>
         )}
         {view === 'week' && (
-          <WeekView
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            role={role}
-            roomFilter={roomFilter}
-            onBookRoom={openBooking}
-            onOpenDetail={openDetail}
-          />
+          <div id="panel-week" role="tabpanel" aria-labelledby="tab-week">
+            <WeekView
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              role={role}
+              roomFilter={roomFilter}
+              onBookRoom={openBooking}
+              onOpenDetail={openDetail}
+            />
+          </div>
         )}
         {view === 'day' && (
-          <DayView
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            role={role}
-            roomFilter={roomFilter}
-            onBookRoom={openBooking}
-            onOpenDetail={openDetail}
-          />
+          <div id="panel-day" role="tabpanel" aria-labelledby="tab-day">
+            <DayView
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              role={role}
+              roomFilter={roomFilter}
+              onBookRoom={openBooking}
+              onOpenDetail={openDetail}
+            />
+          </div>
         )}
         {view === 'agenda' && (
-          <AgendaView role={role} onOpenDetail={openDetail} />
+          <div id="panel-agenda" role="tabpanel" aria-labelledby="tab-agenda">
+            <AgendaView role={role} onOpenDetail={openDetail} />
+          </div>
         )}
       </main>
 
@@ -440,29 +479,33 @@ function StatCard({
   tone: string
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${tone}`}>{icon}</div>
-      <div className="text-2xl font-bold leading-none">{value}</div>
-      <div className="text-xs text-slate-500 mt-1">{label}</div>
+    <div className="bg-white rounded-xl border border-slate-200 p-2 sm:p-4">
+      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-2 ${tone}`}>{icon}</div>
+      <div className="text-xl sm:text-2xl font-bold leading-none">{value}</div>
+      <div className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-tight">{label}</div>
     </div>
   )
 }
 
 
 function ToolTab({
-  active, onClick, icon, label,
+  active, onClick, icon, label, id, controls,
 }: {
   active: boolean
   onClick: () => void
   icon: React.ReactNode
   label: string
+  id?: string
+  controls?: string
 }) {
   return (
     <button
+      id={id}
       role="tab"
       aria-selected={active}
+      aria-controls={controls}
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition ${
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] sm:min-h-0 rounded-md text-sm font-medium transition ${
         active ? 'bg-buu text-white' : 'text-slate-500 hover:text-slate-700'
       }`}
     >
@@ -520,9 +563,6 @@ function LoginModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (pin
           >
             เข้าสู่ระบบ
           </button>
-          <p className="text-xs text-slate-400">
-            รหัสเริ่มต้น: <span className="font-mono font-semibold">123456</span>
-          </p>
         </div>
       </div>
     </div>

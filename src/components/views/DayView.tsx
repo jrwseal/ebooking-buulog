@@ -55,8 +55,8 @@ export default function DayView({
           วัน{TH_DAYS_FULL[dDate.getDay()]} {thaiFull(selectedDate)}
         </h2>
         <div className="flex items-center gap-1">
-          <NavBtn onClick={() => shiftDay(-1)}>
-            <ChevronLeft size={18} />
+          <NavBtn aria-label="วันก่อน" onClick={() => shiftDay(-1)}>
+            <ChevronLeft size={18} aria-hidden="true" />
           </NavBtn>
           <button
             onClick={() => setSelectedDate(todayStr)}
@@ -64,8 +64,8 @@ export default function DayView({
           >
             วันนี้
           </button>
-          <NavBtn onClick={() => shiftDay(1)}>
-            <ChevronRight size={18} />
+          <NavBtn aria-label="วันถัดไป" onClick={() => shiftDay(1)}>
+            <ChevronRight size={18} aria-hidden="true" />
           </NavBtn>
         </div>
       </div>
@@ -90,10 +90,11 @@ export default function DayView({
   )
 }
 
-function NavBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function NavBtn({ onClick, children, 'aria-label': ariaLabel }: { onClick: () => void; children: React.ReactNode; 'aria-label'?: string }) {
   return (
     <button
       onClick={onClick}
+      aria-label={ariaLabel}
       className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-600"
     >
       {children}

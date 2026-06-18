@@ -8,9 +8,9 @@ export const TH_MONTHS: readonly string[] = [
 ]
 
 export const STATUS: Record<Status, { label: string; chip: string; dot: string }> = {
-  pending:  { label: 'รออนุมัติ',   chip: 'bg-amber-100 text-amber-800 border-amber-200',           dot: '#d97706' },
-  approved: { label: 'อนุมัติแล้ว', chip: 'bg-green-100 text-green-800 border-green-200',           dot: '#16a34a' },
-  rejected: { label: 'ไม่อนุมัติ',  chip: 'bg-rose-50 text-rose-700 border-rose-200 line-through', dot: '#e11d48' },
+  pending:  { label: 'รออนุมัติ',   chip: 'bg-amber-100 text-amber-800 border-amber-200',           dot: 'oklch(67% 0.18 58)' },
+  approved: { label: 'อนุมัติแล้ว', chip: 'bg-green-100 text-green-800 border-green-200',           dot: 'oklch(53% 0.15 150)' },
+  rejected: { label: 'ไม่อนุมัติ',  chip: 'bg-rose-50 text-rose-700 border-rose-200 line-through', dot: 'oklch(59% 0.25 15)' },
 }
 
 export const pad = (n: number): string => String(n).padStart(2, '0')
