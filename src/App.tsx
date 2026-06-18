@@ -33,6 +33,7 @@ export default function App() {
   const [view, setView] = useState<ViewMode>('month')
   const [cursor, setCursor] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(todayStr)
+  const [roomFilter, setRoomFilter] = useState('all')
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const [showBooking, setShowBooking] = useState(false)
@@ -249,11 +250,11 @@ export default function App() {
         </div>
 
         {/* Tab bar + admin toolbar */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
           <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5">
-            <ToolTab active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} />} label="เดือน" />
-            <ToolTab active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} />} label="สัปดาห์" />
             <ToolTab active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} />} label="วัน" />
+            <ToolTab active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} />} label="สัปดาห์" />
+            <ToolTab active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} />} label="เดือน" />
             <ToolTab active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} />} label="รายการ" />
           </div>
 
@@ -302,6 +303,14 @@ export default function App() {
           )}
         </div>
 
+        {/* Room filter buttons */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3 scrollbar-none">
+          <RoomFilterBtn active={roomFilter === 'all'} onClick={() => setRoomFilter('all')} label="ทุกห้อง" />
+          {rooms.map((r) => (
+            <RoomFilterBtn key={r.id} active={roomFilter === r.id} onClick={() => setRoomFilter(r.id)} label={r.name} />
+          ))}
+        </div>
+
         {/* Views */}
         {view === 'month' && (
           <MonthView
@@ -310,6 +319,7 @@ export default function App() {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             role={role}
+            roomFilter={roomFilter}
             onSwitchToDayView={() => setView('day')}
             onBookRoom={openBooking}
           />
@@ -319,6 +329,7 @@ export default function App() {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             role={role}
+            roomFilter={roomFilter}
             onBookRoom={openBooking}
             onOpenDetail={openDetail}
           />
@@ -328,6 +339,7 @@ export default function App() {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             role={role}
+            roomFilter={roomFilter}
             onBookRoom={openBooking}
             onOpenDetail={openDetail}
           />
@@ -468,6 +480,21 @@ function StatCard({
       <div className="text-2xl font-bold leading-none">{value}</div>
       <div className="text-xs text-slate-500 mt-1">{label}</div>
     </div>
+  )
+}
+
+function RoomFilterBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-shrink-0 text-sm px-3 py-1.5 rounded-full border font-medium transition ${
+        active
+          ? 'bg-[#1b3a6b] text-white border-[#1b3a6b]'
+          : 'bg-white text-slate-600 border-slate-200 hover:border-[#4a72b0] hover:text-[#1b3a6b]'
+      }`}
+    >
+      {label}
+    </button>
   )
 }
 

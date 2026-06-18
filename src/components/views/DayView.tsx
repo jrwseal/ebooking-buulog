@@ -10,6 +10,7 @@ interface DayViewProps {
   selectedDate: string
   setSelectedDate: (s: string) => void
   role: 'requester' | 'approver'
+  roomFilter: string
   onBookRoom: (dateStr: string, roomId: string | null, hour: number) => void
   onOpenDetail: (b: Booking) => void
 }
@@ -18,6 +19,7 @@ export default function DayView({
   selectedDate,
   setSelectedDate,
   role,
+  roomFilter,
   onBookRoom,
   onOpenDetail,
 }: DayViewProps) {
@@ -25,21 +27,20 @@ export default function DayView({
 
   const dDate = useMemo(() => parseDate(selectedDate), [selectedDate])
 
-  const columns = useMemo(
-    () =>
-      rooms.map((r) => ({
-        key: r.id,
-        label: r.id.replace('LOG-', ''),
-        sublabel: `${r.type} · ${r.capacity}`,
-        isToday: selectedDate === todayStr,
-        dateStr: selectedDate,
-        roomId: r.id,
-        items: bookings.filter(
-          (b) => b.date === selectedDate && b.status !== 'rejected' && b.roomId === r.id,
-        ),
-      })),
-    [rooms, bookings, selectedDate],
-  )
+  const columns = useMemo(() => {
+    const filtered = roomFilter !== 'all' ? rooms.filter((r) => r.id === roomFilter) : rooms
+    return filtered.map((r) => ({
+      key: r.id,
+      label: r.id.replace('LOG-', ''),
+      sublabel: `${r.type} · ${r.capacity}`,
+      isToday: selectedDate === todayStr,
+      dateStr: selectedDate,
+      roomId: r.id,
+      items: bookings.filter(
+        (b) => b.date === selectedDate && b.status !== 'rejected' && b.roomId === r.id,
+      ),
+    }))
+  }, [rooms, bookings, selectedDate, roomFilter])
 
   function shiftDay(n: number) {
     const d = parseDate(selectedDate)

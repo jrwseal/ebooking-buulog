@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import {
@@ -12,6 +12,7 @@ interface WeekViewProps {
   selectedDate: string
   setSelectedDate: (s: string) => void
   role: 'requester' | 'approver'
+  roomFilter: string
   onBookRoom: (dateStr: string, roomId: string | null, hour: number) => void
   onOpenDetail: (b: Booking) => void
 }
@@ -20,11 +21,11 @@ export default function WeekView({
   selectedDate,
   setSelectedDate,
   role,
+  roomFilter,
   onBookRoom,
   onOpenDetail,
 }: WeekViewProps) {
-  const { rooms, bookings } = useStore()
-  const [roomFilter, setRoomFilter] = useState('all')
+  const { bookings } = useStore()
 
   const wDays = useMemo(() => weekDays(selectedDate), [selectedDate])
 
@@ -66,33 +67,19 @@ export default function WeekView({
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-slate-100">
         <h2 className="font-bold">{weekLabel}</h2>
-        <div className="flex items-center gap-2">
-          <select
-            value={roomFilter}
-            onChange={(e) => setRoomFilter(e.target.value)}
-            className="text-sm border border-slate-200 rounded-md px-2 py-1.5 bg-white outline-none focus:border-[#1b3a6b]"
+        <div className="flex items-center gap-1">
+          <NavBtn onClick={() => shiftWeek(-7)}>
+            <ChevronLeft size={18} />
+          </NavBtn>
+          <button
+            onClick={() => setSelectedDate(todayStr)}
+            className="text-xs font-medium px-2.5 py-1.5 rounded-md hover:bg-slate-100 text-slate-600"
           >
-            <option value="all">ทุกห้อง</option>
-            {rooms.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-          <div className="flex items-center gap-1">
-            <NavBtn onClick={() => shiftWeek(-7)}>
-              <ChevronLeft size={18} />
-            </NavBtn>
-            <button
-              onClick={() => setSelectedDate(todayStr)}
-              className="text-xs font-medium px-2.5 py-1.5 rounded-md hover:bg-slate-100 text-slate-600"
-            >
-              สัปดาห์นี้
-            </button>
-            <NavBtn onClick={() => shiftWeek(7)}>
-              <ChevronRight size={18} />
-            </NavBtn>
-          </div>
+            สัปดาห์นี้
+          </button>
+          <NavBtn onClick={() => shiftWeek(7)}>
+            <ChevronRight size={18} />
+          </NavBtn>
         </div>
       </div>
 

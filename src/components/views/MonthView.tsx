@@ -11,6 +11,7 @@ interface MonthViewProps {
   selectedDate: string
   setSelectedDate: (s: string) => void
   role: 'requester' | 'approver'
+  roomFilter: string
   onSwitchToDayView: () => void
   onBookRoom: (date: string) => void
 }
@@ -21,6 +22,7 @@ export default function MonthView({
   selectedDate,
   setSelectedDate,
   role,
+  roomFilter,
   onSwitchToDayView,
   onBookRoom,
 }: MonthViewProps) {
@@ -39,7 +41,9 @@ export default function MonthView({
   }, [bookings])
 
   const months = buildMonth(cursor)
-  const dayList = byDate[selectedDate] ?? []
+  const dayList = (byDate[selectedDate] ?? []).filter(
+    (b) => roomFilter === 'all' || b.roomId === roomFilter,
+  )
 
   return (
     <div className="grid lg:grid-cols-3 gap-4">
@@ -79,7 +83,9 @@ export default function MonthView({
           {months.map((d, i) => {
             const ds = fmtDate(d)
             const inMonth = d.getMonth() === cursor.getMonth()
-            const items = byDate[ds] ?? []
+            const items = (byDate[ds] ?? []).filter(
+              (b) => roomFilter === 'all' || b.roomId === roomFilter,
+            )
             const isToday = ds === todayStr
             const isSel = ds === selectedDate
             return (
