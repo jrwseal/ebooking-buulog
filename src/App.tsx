@@ -3,7 +3,7 @@ import {
   Plus, Lock, LogOut, KeyRound,
   LayoutGrid, CalendarRange, CalendarDays, List,
   CheckCircle2, Hourglass, MapPin, X,
-  ClipboardCheck, RotateCcw, Trash2, DoorOpen,
+  ClipboardCheck, RotateCcw, Trash2, DoorOpen, ChevronDown,
 } from 'lucide-react'
 import { useFocusTrap } from './hooks/useFocusTrap'
 import { useStore } from './store/useStore'
@@ -302,15 +302,19 @@ export default function App() {
           )}
         </div>
 
-        {/* Room filter buttons */}
-        <div className="relative mb-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            <RoomFilterBtn active={roomFilter === 'all'} onClick={() => setRoomFilter('all')} label="ทุกห้อง" />
+        {/* Room filter */}
+        <div className="relative inline-flex items-center mb-3">
+          <select
+            value={roomFilter}
+            onChange={(e) => setRoomFilter(e.target.value)}
+            className="appearance-none text-sm font-medium text-slate-600 bg-transparent pr-5 cursor-pointer outline-none hover:text-slate-900 transition"
+          >
+            <option value="all">ทุกห้อง</option>
             {rooms.map((r) => (
-              <RoomFilterBtn key={r.id} active={roomFilter === r.id} onClick={() => setRoomFilter(r.id)} label={r.name} />
+              <option key={r.id} value={r.id}>{r.name}</option>
             ))}
-          </div>
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
+          </select>
+          <ChevronDown size={13} className="pointer-events-none absolute right-0 text-slate-400" />
         </div>
 
         {/* Views */}
@@ -449,21 +453,6 @@ function StatCard({
   )
 }
 
-function RoomFilterBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`flex-shrink-0 text-xs px-3 py-1 rounded-full font-medium transition ${
-        active
-          ? 'bg-buu text-white'
-          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      }`}
-    >
-      {label}
-    </button>
-  )
-}
 
 function ToolTab({
   active, onClick, icon, label,
