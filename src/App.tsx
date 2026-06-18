@@ -317,6 +317,7 @@ export default function App() {
           <WeekView
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            role={role}
             onBookRoom={openBooking}
             onOpenDetail={openDetail}
           />
@@ -325,12 +326,13 @@ export default function App() {
           <DayView
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            role={role}
             onBookRoom={openBooking}
             onOpenDetail={openDetail}
           />
         )}
         {view === 'agenda' && (
-          <AgendaView onOpenDetail={openDetail} />
+          <AgendaView role={role} onOpenDetail={openDetail} />
         )}
       </main>
 

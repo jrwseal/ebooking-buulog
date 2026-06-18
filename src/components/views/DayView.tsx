@@ -9,6 +9,7 @@ import type { Booking } from '../../types'
 interface DayViewProps {
   selectedDate: string
   setSelectedDate: (s: string) => void
+  role: 'requester' | 'approver'
   onBookRoom: (dateStr: string, roomId: string | null, hour: number) => void
   onOpenDetail: (b: Booking) => void
 }
@@ -16,6 +17,7 @@ interface DayViewProps {
 export default function DayView({
   selectedDate,
   setSelectedDate,
+  role,
   onBookRoom,
   onOpenDetail,
 }: DayViewProps) {
@@ -76,6 +78,7 @@ export default function DayView({
           <ScheduleGrid
             columns={columns}
             showRoom={false}
+            maskDetails={role === 'requester'}
             onSelect={onOpenDetail}
             onCreate={onBookRoom}
           />

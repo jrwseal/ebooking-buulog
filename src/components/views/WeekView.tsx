@@ -11,6 +11,7 @@ import type { Booking } from '../../types'
 interface WeekViewProps {
   selectedDate: string
   setSelectedDate: (s: string) => void
+  role: 'requester' | 'approver'
   onBookRoom: (dateStr: string, roomId: string | null, hour: number) => void
   onOpenDetail: (b: Booking) => void
 }
@@ -18,6 +19,7 @@ interface WeekViewProps {
 export default function WeekView({
   selectedDate,
   setSelectedDate,
+  role,
   onBookRoom,
   onOpenDetail,
 }: WeekViewProps) {
@@ -121,6 +123,7 @@ export default function WeekView({
       <ScheduleGrid
         columns={columns}
         showRoom={roomFilter === 'all'}
+        maskDetails={role === 'requester'}
         onSelect={onOpenDetail}
         onCreate={onBookRoom}
       />

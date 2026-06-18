@@ -5,10 +5,12 @@ import { STATUS, thaiFull, todayStr } from '../../utils/datetime'
 import type { Booking } from '../../types'
 
 interface AgendaViewProps {
+  role: 'requester' | 'approver'
   onOpenDetail: (b: Booking) => void
 }
 
-export default function AgendaView({ onOpenDetail }: AgendaViewProps) {
+export default function AgendaView({ role, onOpenDetail }: AgendaViewProps) {
+  const masked = role === 'requester'
   const { rooms, bookings } = useStore()
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? id
 
@@ -49,14 +51,18 @@ export default function AgendaView({ onOpenDetail }: AgendaViewProps) {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm truncate">{b.title}</p>
+                      <p className="font-semibold text-sm truncate">
+                        {masked ? 'จองแล้ว' : b.title}
+                      </p>
                       <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                         <Clock size={12} /> {b.start}–{b.end} ·{' '}
                         <MapPin size={12} /> {roomName(b.roomId)}
                       </p>
-                      <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Users size={12} /> {b.requester}
-                      </p>
+                      {!masked && (
+                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                          <Users size={12} /> {b.requester}
+                        </p>
+                      )}
                     </div>
                     <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full border ${S.chip}`}>
                       {S.label}

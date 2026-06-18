@@ -15,6 +15,7 @@ export interface ScheduleColumn {
 interface ScheduleGridProps {
   columns: ScheduleColumn[]
   showRoom: boolean
+  maskDetails?: boolean
   onSelect: (b: Booking) => void
   onCreate: (dateStr: string, roomId: string | null, hour: number) => void
 }
@@ -58,7 +59,7 @@ function layoutColumn(items: Booking[]): LaidOut[] {
   return result
 }
 
-export default function ScheduleGrid({ columns, showRoom, onSelect, onCreate }: ScheduleGridProps) {
+export default function ScheduleGrid({ columns, showRoom, maskDetails = false, onSelect, onCreate }: ScheduleGridProps) {
   const now = new Date()
   const nowMin = now.getHours() * 60 + now.getMinutes()
 
@@ -158,7 +159,7 @@ export default function ScheduleGrid({ columns, showRoom, onSelect, onCreate }: 
                     >
                       <div className="text-[10px] font-semibold leading-tight truncate">
                         {showRoom ? b.roomId.replace('LOG-', '') + ' · ' : ''}
-                        {b.title}
+                        {maskDetails ? 'จองแล้ว' : b.title}
                       </div>
                       {h > 30 && (
                         <div className="text-[9px] opacity-80 truncate">

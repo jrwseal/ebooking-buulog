@@ -72,29 +72,49 @@ export default function BookingDetailModal({
         </div>
 
         <div className="p-4 space-y-2.5">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="font-bold text-base">{b.title}</h4>
-            <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full border ${S.chip}`}>
-              {S.label}
-            </span>
-          </div>
-          <p className="text-sm text-slate-600 flex items-center gap-1.5">
-            <CalendarDays size={14} /> {thaiFull(b.date)}
-          </p>
-          <p className="text-sm text-slate-600 flex items-center gap-1.5">
-            <Clock size={14} /> {b.start}–{b.end}
-          </p>
-          <p className="text-sm text-slate-600 flex items-center gap-1.5">
-            <MapPin size={14} /> {roomName(b.roomId)}
-          </p>
-          <p className="text-sm text-slate-600 flex items-center gap-1.5">
-            <Users size={14} /> {b.requester}
-          </p>
-          {b.purpose && (
-            <p className="text-sm text-slate-500 bg-slate-50 rounded-lg p-2">{b.purpose}</p>
-          )}
-          {b.reviewNote && !canDecide && (
-            <p className="text-sm text-slate-500">หมายเหตุผู้อนุมัติ: {b.reviewNote}</p>
+          {role === 'requester' ? (
+            <>
+              <p className="text-sm text-slate-500">ช่วงเวลานี้ถูกจองแล้ว</p>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <CalendarDays size={14} /> {thaiFull(b.date)}
+              </p>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <Clock size={14} /> {b.start}–{b.end}
+              </p>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <MapPin size={14} /> {roomName(b.roomId)}
+              </p>
+              <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full border ${S.chip}`}>
+                {S.label}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-2">
+                <h4 className="font-bold text-base">{b.title}</h4>
+                <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full border ${S.chip}`}>
+                  {S.label}
+                </span>
+              </div>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <CalendarDays size={14} /> {thaiFull(b.date)}
+              </p>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <Clock size={14} /> {b.start}–{b.end}
+              </p>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <MapPin size={14} /> {roomName(b.roomId)}
+              </p>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <Users size={14} /> {b.requester}
+              </p>
+              {b.purpose && (
+                <p className="text-sm text-slate-500 bg-slate-50 rounded-lg p-2">{b.purpose}</p>
+              )}
+              {b.reviewNote && !canDecide && (
+                <p className="text-sm text-slate-500">หมายเหตุผู้อนุมัติ: {b.reviewNote}</p>
+              )}
+            </>
           )}
 
           {conflicts.length > 0 && (
