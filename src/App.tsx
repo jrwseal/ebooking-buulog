@@ -3,7 +3,7 @@ import {
   Plus, Lock, LogOut, KeyRound,
   LayoutGrid, CalendarRange, CalendarDays, List,
   CheckCircle2, Hourglass, MapPin, X,
-  ClipboardCheck, Trash2, DoorOpen, ChevronDown,
+  ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap,
 } from 'lucide-react'
 import { useFocusTrap } from './hooks/useFocusTrap'
 import { useStore } from './store/useStore'
@@ -39,6 +39,7 @@ export default function App() {
 
   const [clearConfirm, setClearConfirm] = useState(false)
   const [showBooking, setShowBooking] = useState(false)
+  const [bookingAdminMode, setBookingAdminMode] = useState(false)
   const [bookingDefaultDate, setBookingDefaultDate] = useState(todayStr)
   const [bookingDefaultRoomId, setBookingDefaultRoomId] = useState<string | null>(null)
   const [bookingDefaultHour, setBookingDefaultHour] = useState<number | undefined>(undefined)
@@ -140,9 +141,18 @@ export default function App() {
   }
 
   function openBooking(date: string, roomId?: string | null, hour?: number) {
+    setBookingAdminMode(false)
     setBookingDefaultDate(date)
     setBookingDefaultRoomId(roomId ?? null)
     setBookingDefaultHour(hour)
+    setShowBooking(true)
+  }
+
+  function openTeacherSchedule() {
+    setBookingAdminMode(true)
+    setBookingDefaultDate(todayStr)
+    setBookingDefaultRoomId(null)
+    setBookingDefaultHour(undefined)
     setShowBooking(true)
   }
 
@@ -273,6 +283,12 @@ export default function App() {
           {role === 'approver' && authed && (
             <>
               <button
+                onClick={openTeacherSchedule}
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
+              >
+                <GraduationCap size={16} aria-hidden="true" /> ตารางสอน
+              </button>
+              <button
                 onClick={() => setShowApprovals(true)}
                 className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
               >
@@ -395,6 +411,7 @@ export default function App() {
           defaultDate={bookingDefaultDate}
           defaultRoomId={bookingDefaultRoomId}
           defaultHour={bookingDefaultHour}
+          adminMode={bookingAdminMode}
           onClose={() => setShowBooking(false)}
           onSuccess={(msg) => flash(msg)}
           onError={(msg) => flash(msg, 'error')}

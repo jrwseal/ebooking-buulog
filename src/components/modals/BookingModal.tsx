@@ -9,13 +9,14 @@ interface BookingModalProps {
   defaultDate: string
   defaultRoomId?: string | null
   defaultHour?: number
+  adminMode?: boolean
   onClose: () => void
   onSuccess: (msg: string) => void
   onError: (msg: string) => void
 }
 
-export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, onClose, onSuccess, onError }: BookingModalProps) {
-  const { rooms, bookings, addBooking } = useStore()
+export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, adminMode = false, onClose, onSuccess, onError }: BookingModalProps) {
+  const { rooms, bookings, addBooking, addSchedule } = useStore()
   const trapRef = useFocusTrap<HTMLDivElement>()
 
   const [form, setForm] = useState<BookingInput>({
@@ -56,8 +57,14 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     }
     setSubmitting(true)
     try {
-      await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim() })
-      onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
+      const payload = { ...form, title: form.title.trim(), requester: form.requester.trim() }
+      if (adminMode) {
+        await addSchedule(payload)
+        onSuccess('บันทึกตารางสอนแล้ว')
+      } else {
+        await addBooking(payload)
+        onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
+      }
       onClose()
     } catch {
       onError('บันทึกไม่สำเร็จ ลองอีกครั้ง')
@@ -81,7 +88,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <h3 id="booking-modal-title" className="font-bold">แบบฟอร์มขอจองห้อง</h3>
+          <h3 id="booking-modal-title" className="font-bold">{adminMode ? 'เพิ่มตารางสอนอาจารย์' : 'แบบฟอร์มขอจองห้อง'}</h3>
           <button
             onClick={onClose}
             aria-label="ปิด"
@@ -102,20 +109,20 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
             </select>
           </Field>
 
-          <Field label="หัวข้อ / รายวิชา *">
+          <Field label={adminMode ? 'วิชา / กิจกรรม *' : 'หัวข้อ / รายวิชา *'}>
             <input
               value={form.title}
               onChange={(e) => update('title', e.target.value)}
-              placeholder="เช่น การจัดการคลังสินค้า"
+              placeholder={adminMode ? 'เช่น การจัดการโซ่อุปทาน 3/2567' : 'เช่น การจัดการคลังสินค้า'}
               className="input"
             />
           </Field>
 
-          <Field label="ผู้จอง *">
+          <Field label={adminMode ? 'อาจารย์ผู้สอน *' : 'ผู้จอง *'}>
             <input
               value={form.requester}
               onChange={(e) => update('requester', e.target.value)}
-              placeholder="ชื่อ-นามสกุล / หน่วยงาน"
+              placeholder={adminMode ? 'ชื่อ-นามสกุล อาจารย์' : 'ชื่อ-นามสกุล / หน่วยงาน'}
               className="input"
             />
           </Field>
@@ -168,7 +175,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
               disabled={submitting || liveConflicts.length > 0}
               className="flex-1 py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-60"
             >
-              {submitting ? 'กำลังส่ง…' : 'ส่งคำขอจอง'}
+              {submitting ? 'กำลังบันทึก…' : adminMode ? 'บันทึกตารางสอน' : 'ส่งคำขอจอง'}
             </button>
           </div>
         </div>
