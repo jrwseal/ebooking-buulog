@@ -454,10 +454,10 @@ function RoomFilterBtn({ active, onClick, label }: { active: boolean; onClick: (
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex-shrink-0 text-xs px-2.5 py-1 rounded-md font-medium transition ${
+      className={`flex-shrink-0 text-xs px-3 py-1 rounded-full font-medium transition ${
         active
           ? 'bg-buu text-white'
-          : 'text-slate-500 hover:text-slate-700'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
       }`}
     >
       {label}
