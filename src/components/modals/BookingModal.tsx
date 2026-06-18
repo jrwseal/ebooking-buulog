@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { X, AlertTriangle } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { X, AlertTriangle, Info, Repeat2 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { todayStr, toMin, overlaps, pad } from '../../utils/datetime'
+import { todayStr, toMin, overlaps, pad, parseDate, fmtDate } from '../../utils/datetime'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { BookingInput } from '../../store/useStore'
 
@@ -16,7 +16,7 @@ interface BookingModalProps {
 }
 
 export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, adminMode = false, onClose, onSuccess, onError }: BookingModalProps) {
-  const { rooms, bookings, addBooking, addSchedule } = useStore()
+  const { rooms, bookings, addBooking, addSchedule, addSchedules } = useStore()
   const trapRef = useFocusTrap<HTMLDivElement>()
 
   const [form, setForm] = useState<BookingInput>({
@@ -29,14 +29,37 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     purpose: '',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [recur, setRecur] = useState(false)
+  const [recurEnd, setRecurEnd] = useState('')
 
-  const liveConflicts = bookings.filter(
-    (b) =>
-      b.roomId === form.roomId &&
-      b.date === form.date &&
-      b.status !== 'rejected' &&
-      overlaps(form.start, form.end, b.start, b.end),
+  // All dates this submission will cover
+  const occurrences = useMemo(() => {
+    if (!adminMode || !recur || !recurEnd || recurEnd < form.date) return [form.date]
+    const dates: string[] = []
+    const cur = parseDate(form.date)
+    while (fmtDate(cur) <= recurEnd) {
+      dates.push(fmtDate(cur))
+      cur.setDate(cur.getDate() + 7)
+    }
+    return dates
+  }, [adminMode, recur, recurEnd, form.date])
+
+  // Which dates have conflicts (pending or approved)
+  const conflictedDates = useMemo(() =>
+    occurrences.filter((date) =>
+      bookings.some(
+        (b) =>
+          b.roomId === form.roomId &&
+          b.date === date &&
+          b.status !== 'rejected' &&
+          overlaps(form.start, form.end, b.start, b.end),
+      ),
+    ),
+    [occurrences, bookings, form.roomId, form.start, form.end],
   )
+
+  const cleanDates = occurrences.filter((d) => !conflictedDates.includes(d))
+  const isRecurMode = adminMode && recur && occurrences.length > 1
 
   function update<K extends keyof BookingInput>(key: K, value: BookingInput[K]) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -51,20 +74,63 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
       onError('เวลาสิ้นสุดต้องหลังเวลาเริ่ม')
       return
     }
-    if (liveConflicts.length > 0) {
+
+    if (adminMode) {
+      if (isRecurMode) {
+        if (cleanDates.length === 0) {
+          onError('ทุกสัปดาห์มีการจองซ้ำ ไม่สามารถบันทึกได้')
+          return
+        }
+        setSubmitting(true)
+        try {
+          const inputs = cleanDates.map((date) => ({
+            ...form,
+            date,
+            title: form.title.trim(),
+            requester: form.requester.trim(),
+          }))
+          await addSchedules(inputs)
+          const skipped = conflictedDates.length
+          onSuccess(
+            `บันทึกตารางสอน ${cleanDates.length} สัปดาห์แล้ว` +
+            (skipped > 0 ? ` (ข้าม ${skipped} สัปดาห์ที่ชนกัน)` : ''),
+          )
+          onClose()
+        } catch {
+          onError('บันทึกไม่สำเร็จ ลองอีกครั้ง')
+        } finally {
+          setSubmitting(false)
+        }
+        return
+      }
+
+      // Single admin schedule
+      if (conflictedDates.length > 0) {
+        onError('ช่วงเวลานี้ถูกจองแล้ว ไม่สามารถบันทึกได้')
+        return
+      }
+      setSubmitting(true)
+      try {
+        await addSchedule({ ...form, title: form.title.trim(), requester: form.requester.trim() })
+        onSuccess('บันทึกตารางสอนแล้ว')
+        onClose()
+      } catch {
+        onError('บันทึกไม่สำเร็จ ลองอีกครั้ง')
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
+    // Regular student booking
+    if (conflictedDates.length > 0) {
       onError('ช่วงเวลานี้ถูกจองแล้ว ไม่สามารถส่งคำขอได้')
       return
     }
     setSubmitting(true)
     try {
-      const payload = { ...form, title: form.title.trim(), requester: form.requester.trim() }
-      if (adminMode) {
-        await addSchedule(payload)
-        onSuccess('บันทึกตารางสอนแล้ว')
-      } else {
-        await addBooking(payload)
-        onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
-      }
+      await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim() })
+      onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
       onClose()
     } catch {
       onError('บันทึกไม่สำเร็จ ลองอีกครั้ง')
@@ -72,6 +138,10 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
       setSubmitting(false)
     }
   }
+
+  const submitDisabled =
+    submitting ||
+    (isRecurMode ? cleanDates.length === 0 : conflictedDates.length > 0)
 
   return (
     <div
@@ -88,7 +158,9 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <h3 id="booking-modal-title" className="font-bold">{adminMode ? 'เพิ่มตารางสอนอาจารย์' : 'แบบฟอร์มขอจองห้อง'}</h3>
+          <h3 id="booking-modal-title" className="font-bold">
+            {adminMode ? 'เพิ่มตารางสอนอาจารย์' : 'แบบฟอร์มขอจองห้อง'}
+          </h3>
           <button
             onClick={onClose}
             aria-label="ปิด"
@@ -129,7 +201,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             <div className="col-span-2 sm:col-span-1">
-              <Field label="วันที่">
+              <Field label={adminMode && recur ? 'วันเริ่มต้น' : 'วันที่'}>
                 <input type="date" value={form.date} onChange={(e) => update('date', e.target.value)} className="input" />
               </Field>
             </div>
@@ -141,24 +213,78 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
             </Field>
           </div>
 
-          <Field label="รายละเอียดเพิ่มเติม">
-            <textarea
-              value={form.purpose}
-              onChange={(e) => update('purpose', e.target.value)}
-              rows={2}
-              placeholder="วัตถุประสงค์ / อุปกรณ์ที่ต้องใช้"
-              className="input resize-none"
-            />
-          </Field>
+          {/* Recur toggle — admin only */}
+          {adminMode && (
+            <div className="space-y-2.5">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={recur}
+                  onChange={(e) => setRecur(e.target.checked)}
+                  className="w-4 h-4 accent-buu rounded"
+                />
+                <span className="flex items-center gap-1.5 text-sm font-medium text-slate-600">
+                  <Repeat2 size={15} aria-hidden="true" /> ซ้ำทุกสัปดาห์
+                </span>
+              </label>
 
-          {liveConflicts.length > 0 && (
+              {recur && (
+                <Field label="วันสิ้นสุด">
+                  <input
+                    type="date"
+                    value={recurEnd}
+                    min={form.date}
+                    onChange={(e) => setRecurEnd(e.target.value)}
+                    className="input"
+                  />
+                </Field>
+              )}
+            </div>
+          )}
+
+          {!adminMode && (
+            <Field label="รายละเอียดเพิ่มเติม">
+              <textarea
+                value={form.purpose}
+                onChange={(e) => update('purpose', e.target.value)}
+                rows={2}
+                placeholder="วัตถุประสงค์ / อุปกรณ์ที่ต้องใช้"
+                className="input resize-none"
+              />
+            </Field>
+          )}
+
+          {/* Recur summary */}
+          {isRecurMode && recurEnd && (
+            conflictedDates.length === 0 ? (
+              <div className="flex gap-2 bg-buu-tint border border-buu/20 text-buu text-sm rounded-lg p-2.5">
+                <Info size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
+                จะสร้างตารางสอน <span className="font-semibold">{occurrences.length} สัปดาห์</span>
+              </div>
+            ) : cleanDates.length > 0 ? (
+              <div className="flex gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg p-2.5">
+                <AlertTriangle size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                  จะสร้าง <span className="font-semibold">{cleanDates.length} สัปดาห์</span>
+                  {' '}· ข้าม <span className="font-semibold">{conflictedDates.length} สัปดาห์</span> ที่ชนกับการจองที่มีอยู่
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg p-2.5">
+                <AlertTriangle size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
+                ทุกสัปดาห์ชนกับการจองที่มีอยู่ ไม่สามารถบันทึกได้
+              </div>
+            )
+          )}
+
+          {/* Single date conflict */}
+          {!isRecurMode && conflictedDates.length > 0 && (
             <div className="flex gap-2 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg p-2.5">
               <AlertTriangle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                ห้องนี้ถูกจองทับช่วงเวลานี้แล้ว:{' '}
-                <span className="font-medium">{liveConflicts.map((c) => `${c.start}–${c.end}`).join(', ')}</span>
+                ห้องนี้ถูกจองทับช่วงเวลานี้แล้ว
                 <br />
-                <span className="text-rose-500">ไม่สามารถส่งคำขอได้ กรุณาเลือกเวลาอื่น</span>
+                <span className="text-rose-500">ไม่สามารถ{adminMode ? 'บันทึก' : 'ส่งคำขอ'}ได้ กรุณาเลือกเวลาอื่น</span>
               </div>
             </div>
           )}
@@ -172,10 +298,16 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
             </button>
             <button
               onClick={() => void handleSubmit()}
-              disabled={submitting || liveConflicts.length > 0}
+              disabled={submitDisabled}
               className="flex-1 py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-60"
             >
-              {submitting ? 'กำลังบันทึก…' : adminMode ? 'บันทึกตารางสอน' : 'ส่งคำขอจอง'}
+              {submitting
+                ? 'กำลังบันทึก…'
+                : adminMode
+                  ? isRecurMode && recurEnd
+                    ? `บันทึก ${cleanDates.length} สัปดาห์`
+                    : 'บันทึกตารางสอน'
+                  : 'ส่งคำขอจอง'}
             </button>
           </div>
         </div>

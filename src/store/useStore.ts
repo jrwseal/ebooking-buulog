@@ -67,6 +67,7 @@ interface StoreState {
   fetchPin(): Promise<void>
   addBooking(input: BookingInput): Promise<void>
   addSchedule(input: BookingInput): Promise<void>
+  addSchedules(inputs: BookingInput[]): Promise<void>
   updateStatus(id: string, status: Status, note?: string): Promise<void>
   removeBooking(id: string): Promise<void>
   addRoom(room: Room): Promise<void>
@@ -169,6 +170,32 @@ export const useStore = create<StoreState>((set) => ({
       set((state) => ({ bookings: [...state.bookings, rowToBooking(approved as BookingRow)] }))
     } catch (err) {
       console.error('[addSchedule]', err)
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  async addSchedules(inputs: BookingInput[]) {
+    if (inputs.length === 0) return
+    set({ loading: true })
+    try {
+      const { data: inserted, error: e1 } = await supabase
+        .from('bookings')
+        .insert(inputs.map(inputToRow))
+        .select()
+      if (e1) throw e1
+      const ids = (inserted as BookingRow[]).map((r) => r.id)
+      const { data: approved, error: e2 } = await supabase
+        .from('bookings')
+        .update({ status: 'approved', review_note: 'ตารางสอนอาจารย์' })
+        .in('id', ids)
+        .select()
+      if (e2) throw e2
+      const schedules = (approved as BookingRow[]).map(rowToBooking)
+      set((state) => ({ bookings: [...state.bookings, ...schedules] }))
+    } catch (err) {
+      console.error('[addSchedules]', err)
       throw err
     } finally {
       set({ loading: false })
