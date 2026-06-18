@@ -3,11 +3,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: oklch(46% 0.12 180);
-  --color-brand-light: oklch(92% 0.03 180);
-  --color-brand-dark: oklch(35% 0.1 180);
-  --color-buu: #1b3a6b;
-  --color-buu-dark: #122a52;
+  /* BUU navy scale — hue 253, perceptually uniform steps */
+  --color-buu:        oklch(31% 0.11 253);   /* primary brand navy */
+  --color-buu-dark:   oklch(22% 0.09 253);   /* hover / pressed */
+  --color-buu-mid:    oklch(51% 0.09 252);   /* selection rings, active borders */
+  --color-buu-subtle: oklch(67% 0.07 248);   /* hover borders, dividers */
+  --color-buu-tint:   oklch(96% 0.015 253);  /* background tints, today highlight */
   --font-sans: 'Sarabun', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -15,9 +16,9 @@ html {
   font-family: var(--font-sans);
 }
 
-/* Keyboard focus ring — consistent across all interactive elements */
+/* Keyboard focus ring */
 :focus-visible {
-  outline: 2px solid #1b3a6b;
+  outline: 2px solid var(--color-buu);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -40,6 +41,6 @@ html {
   background: #fff;
 }
 .input:focus {
-  border-color: #1b3a6b;
-  box-shadow: 0 0 0 3px rgba(27, 58, 107, .15);
+  border-color: var(--color-buu);
+  box-shadow: 0 0 0 3px oklch(31% 0.11 253 / 0.15);
 }

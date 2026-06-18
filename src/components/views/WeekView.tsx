@@ -95,10 +95,10 @@ export default function WeekView({
               key={ds}
               onClick={() => setSelectedDate(ds)}
               className={`w-28 sm:w-36 shrink-0 py-1.5 text-center border-l border-slate-100 text-xs transition hover:bg-slate-50 ${
-                isToday ? 'bg-[#eef2f9]' : ''
-              } ${isSel ? 'ring-1 ring-inset ring-[#4a72b0]' : ''}`}
+                isToday ? 'bg-buu-tint' : ''
+              } ${isSel ? 'ring-1 ring-inset ring-buu-mid' : ''}`}
             >
-              <span className={`font-semibold ${isToday ? 'text-[#1b3a6b]' : 'text-slate-600'}`}>
+              <span className={`font-semibold ${isToday ? 'text-buu' : 'text-slate-600'}`}>
                 {TH_DAYS[i]}
               </span>
               <span className="text-slate-400 ml-1">{d.getDate()}</span>

@@ -161,7 +161,7 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
             <button
               onClick={() => void handleAdd()}
               disabled={busy}
-              className="flex items-center gap-1.5 w-full justify-center py-2.5 rounded-lg bg-[#1b3a6b] text-white font-semibold hover:bg-[#122a52] disabled:opacity-50 transition"
+              className="flex items-center gap-1.5 w-full justify-center py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-50 transition"
             >
               <Plus size={16} /> เพิ่มห้อง
             </button>

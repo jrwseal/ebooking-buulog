@@ -91,12 +91,12 @@ export default function ScheduleGrid({ columns, showRoom, maskDetails = false, o
               <div
                 style={{ height: HEAD_H }}
                 className={`px-1 flex flex-col justify-center border-b border-slate-100 text-center ${
-                  col.isToday ? 'bg-[#eef2f9]' : 'bg-slate-50'
+                  col.isToday ? 'bg-buu-tint' : 'bg-slate-50'
                 }`}
               >
                 <div
                   className={`text-xs font-semibold truncate leading-tight ${
-                    col.isToday ? 'text-[#1b3a6b]' : 'text-slate-700'
+                    col.isToday ? 'text-buu' : 'text-slate-700'
                   }`}
                 >
                   {col.label}
@@ -121,7 +121,7 @@ export default function ScheduleGrid({ columns, showRoom, maskDetails = false, o
                 {HOURS.slice(0, -1).map((h) => (
                   <button
                     key={h}
-                    className="sr-only focus:not-sr-only focus:absolute focus:z-20 focus:left-1 focus:bg-white focus:text-[#1b3a6b] focus:text-[10px] focus:rounded focus:px-1 focus:py-0.5 focus:shadow"
+                    className="sr-only focus:not-sr-only focus:absolute focus:z-20 focus:left-1 focus:bg-white focus:text-buu focus:text-[10px] focus:rounded focus:px-1 focus:py-0.5 focus:shadow"
                     style={{ top: (h - START_H) * HOUR_H }}
                     onClick={(e) => { e.stopPropagation(); onCreate(col.dateStr, col.roomId, h) }}
                     aria-label={`จอง ${pad(h)}:00`}

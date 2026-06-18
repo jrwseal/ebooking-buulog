@@ -96,7 +96,7 @@ export default function MonthView({
                 className={[
                   'min-h-[78px] sm:min-h-[92px] text-left p-1.5 border-b border-r border-slate-100 transition',
                   inMonth ? '' : 'bg-slate-50/60',
-                  isSel ? 'ring-2 ring-inset ring-[#2a5298]' : 'hover:bg-[#eef2f9]/40',
+                  isSel ? 'ring-2 ring-inset ring-buu' : 'hover:bg-buu-tint/40',
                 ].join(' ')}
               >
                 <div className="flex items-center justify-between">
@@ -104,7 +104,7 @@ export default function MonthView({
                     className={[
                       'text-xs w-5 h-5 flex items-center justify-center rounded-full',
                       isToday
-                        ? 'bg-[#1b3a6b] text-white font-bold'
+                        ? 'bg-buu text-white font-bold'
                         : inMonth
                         ? 'text-slate-600'
                         : 'text-slate-300',
@@ -150,7 +150,7 @@ export default function MonthView({
       {/* Day detail sidebar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <CalendarDays size={18} className="text-[#1b3a6b]" />
+          <CalendarDays size={18} className="text-buu" />
           <h3 className="font-bold">{thaiFull(selectedDate)}</h3>
         </div>
 
@@ -161,7 +161,7 @@ export default function MonthView({
             <div className="mt-3">
               <button
                 onClick={() => onBookRoom(selectedDate)}
-                className="text-[#1b3a6b] font-medium hover:underline"
+                className="text-buu font-medium hover:underline"
               >
                 + จองห้องวันนี้
               </button>
@@ -174,7 +174,7 @@ export default function MonthView({
             ))}
             <button
               onClick={() => onBookRoom(selectedDate)}
-              className="w-full mt-1 text-sm text-[#1b3a6b] font-medium border border-dashed border-[#7b9fd4] rounded-lg py-2 hover:bg-[#eef2f9] transition"
+              className="w-full mt-1 text-sm text-buu font-medium border border-dashed border-buu-subtle rounded-lg py-2 hover:bg-buu-tint transition"
             >
               + เพิ่มการจองในวันนี้
             </button>

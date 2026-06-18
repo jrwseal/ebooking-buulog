@@ -28,7 +28,7 @@ export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProp
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
           <h3 id="change-pin-title" className="font-bold flex items-center gap-2">
-            <KeyRound size={16} className="text-[#1b3a6b]" /> เปลี่ยนรหัสผ่าน
+            <KeyRound size={16} className="text-buu" /> เปลี่ยนรหัสผ่าน
           </h3>
           <button
             onClick={onClose}
@@ -64,7 +64,7 @@ export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProp
           </label>
           <button
             onClick={() => onSubmit(cur, next)}
-            className="w-full py-2.5 rounded-lg bg-[#1b3a6b] text-white font-semibold hover:bg-[#122a52]"
+            className="w-full py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark"
           >
             บันทึกรหัสใหม่
           </button>

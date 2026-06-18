@@ -166,13 +166,13 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-800">
       {/* Loading bar — shows on re-fetch after initial load */}
       {loading && (rooms.length > 0 || bookings.length > 0) && (
-        <div className="fixed top-0 inset-x-0 h-0.5 z-50 bg-[#1b3a6b]/20 overflow-hidden motion-safe:animate-pulse">
-          <div className="h-full bg-[#1b3a6b] w-1/2 motion-safe:animate-[slide_1.2s_ease-in-out_infinite]" />
+        <div className="fixed top-0 inset-x-0 h-0.5 z-50 bg-buu/20 overflow-hidden motion-safe:animate-pulse">
+          <div className="h-full bg-buu w-1/2 motion-safe:animate-[slide_1.2s_ease-in-out_infinite]" />
         </div>
       )}
 
       {/* ── Header ── */}
-      <header className="bg-[#1b3a6b] text-white">
+      <header className="bg-buu text-white">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-3 mr-auto">
             <img
@@ -190,7 +190,7 @@ export default function App() {
             <button
               onClick={() => switchRole('requester')}
               className={`px-3 py-1.5 rounded-md font-medium transition ${
-                role === 'requester' ? 'bg-white text-[#1b3a6b]' : 'text-blue-100 hover:text-white'
+                role === 'requester' ? 'bg-white text-buu' : 'text-blue-100 hover:text-white'
               }`}
             >
               ผู้จอง
@@ -198,7 +198,7 @@ export default function App() {
             <button
               onClick={() => switchRole('approver')}
               className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1 ${
-                role === 'approver' ? 'bg-white text-[#1b3a6b]' : 'text-blue-100 hover:text-white'
+                role === 'approver' ? 'bg-white text-buu' : 'text-blue-100 hover:text-white'
               }`}
             >
               {!authed && <Lock size={13} />} ผู้อนุมัติ
@@ -217,7 +217,7 @@ export default function App() {
 
           <button
             onClick={handleNewBooking}
-            className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-[#1b3a6b] font-semibold text-sm px-3.5 py-2 rounded-lg transition"
+            className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-buu font-semibold text-sm px-3.5 py-2 rounded-lg transition"
           >
             <Plus size={17} /> จองห้อง
           </button>
@@ -244,7 +244,7 @@ export default function App() {
             icon={<MapPin size={18} />}
             value={stats.rooms}
             label="ห้องในระบบ"
-            tone="text-[#1b3a6b] bg-[#eef2f9]"
+            tone="text-buu bg-buu-tint"
           />
         </div>
 
@@ -261,7 +261,7 @@ export default function App() {
             <>
               <button
                 onClick={() => setShowApprovals(true)}
-                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-[#7b9fd4] hover:text-[#1b3a6b] transition"
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
               >
                 <ClipboardCheck size={16} /> คำขอรออนุมัติ
                 {pending.length > 0 && (
@@ -272,7 +272,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowRoomManager(true)}
-                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-[#7b9fd4] hover:text-[#1b3a6b] transition"
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
               >
                 <DoorOpen size={16} /> ห้อง
               </button>
@@ -456,8 +456,8 @@ function RoomFilterBtn({ active, onClick, label }: { active: boolean; onClick: (
       aria-pressed={active}
       className={`flex-shrink-0 text-sm px-3 py-1.5 rounded-full border font-medium transition ${
         active
-          ? 'bg-[#1b3a6b] text-white border-[#1b3a6b]'
-          : 'bg-white text-slate-600 border-slate-200 hover:border-[#4a72b0] hover:text-[#1b3a6b]'
+          ? 'bg-buu text-white border-buu'
+          : 'bg-white text-slate-600 border-slate-200 hover:border-buu-mid hover:text-buu'
       }`}
     >
       {label}
@@ -479,7 +479,7 @@ function ToolTab({
       aria-selected={active}
       onClick={onClick}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition ${
-        active ? 'bg-[#1b3a6b] text-white' : 'text-slate-500 hover:text-slate-700'
+        active ? 'bg-buu text-white' : 'text-slate-500 hover:text-slate-700'
       }`}
     >
       {icon} {label}
@@ -516,7 +516,7 @@ function LoginModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (pin
         </div>
         <div className="p-4 space-y-3">
           <p className="text-sm text-slate-500 flex items-center gap-2">
-            <Lock size={15} className="text-[#1b3a6b]" /> เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้น
+            <Lock size={15} className="text-buu" /> เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้น
           </p>
           <label className="block">
             <span className="block text-xs font-medium text-slate-500 mb-1">รหัสผ่าน</span>
@@ -532,7 +532,7 @@ function LoginModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (pin
           </label>
           <button
             onClick={() => onSubmit(input)}
-            className="w-full py-2.5 rounded-lg bg-[#1b3a6b] text-white font-semibold hover:bg-[#122a52]"
+            className="w-full py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark"
           >
             เข้าสู่ระบบ
           </button>

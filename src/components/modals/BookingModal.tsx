@@ -162,7 +162,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
             <button
               onClick={() => void handleSubmit()}
               disabled={submitting}
-              className="flex-1 py-2.5 rounded-lg bg-[#1b3a6b] text-white font-semibold hover:bg-[#122a52] disabled:opacity-60"
+              className="flex-1 py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-60"
             >
               {submitting ? 'กำลังส่ง…' : 'ส่งคำขอจอง'}
             </button>
