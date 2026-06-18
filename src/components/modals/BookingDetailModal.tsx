@@ -168,6 +168,13 @@ export default function BookingDetailModal({
             </>
           )}
 
+          {b.bookingCode && (
+            <div className="flex items-center gap-2 bg-buu-tint border border-buu/20 rounded-lg px-3 py-2">
+              <span className="text-xs text-buu-mid">รหัสการจอง</span>
+              <span className="font-mono font-bold text-sm text-buu tracking-wider">{b.bookingCode}</span>
+            </div>
+          )}
+
           {b.status === 'approved' && (
             <div className="flex gap-2 pt-1">
               <button

@@ -9,18 +9,25 @@ interface BookingRow {
   room_id: string
   title: string
   requester: string
+  requester_email: string
   date: string
   start_time: string
   end_time: string
   purpose: string
   status: string
   review_note: string
+  booking_code: string
   created_at: string
 }
 
 // ---- Public input type ---------------------------------------------------
 
-export type BookingInput = Omit<Booking, 'id' | 'status' | 'reviewNote' | 'createdAt'>
+export type BookingInput = Omit<Booking, 'id' | 'status' | 'reviewNote' | 'bookingCode' | 'createdAt'>
+
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+function generateCode(): string {
+  return 'LOG-' + Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('')
+}
 
 // ---- Mappers -------------------------------------------------------------
 
@@ -30,12 +37,14 @@ function rowToBooking(row: BookingRow): Booking {
     roomId: row.room_id,
     title: row.title,
     requester: row.requester,
+    email: row.requester_email ?? '',
     date: row.date,
     start: row.start_time,
     end: row.end_time,
     purpose: row.purpose,
     status: row.status as Status,
     reviewNote: row.review_note,
+    bookingCode: row.booking_code ?? '',
     createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
   }
 }
@@ -45,12 +54,14 @@ function inputToRow(input: BookingInput) {
     room_id: input.roomId,
     title: input.title,
     requester: input.requester,
+    requester_email: input.email ?? '',
     date: input.date,
     start_time: input.start,
     end_time: input.end,
     purpose: input.purpose,
     status: 'pending' as const,
     review_note: '',
+    booking_code: generateCode(),
   }
 }
 
@@ -69,6 +80,7 @@ interface StoreState {
   addSchedule(input: BookingInput): Promise<void>
   addSchedules(inputs: BookingInput[]): Promise<void>
   updateStatus(id: string, status: Status, note?: string): Promise<void>
+  notifyApproval(id: string): Promise<void>
   removeBooking(id: string): Promise<void>
   addRoom(room: Room): Promise<void>
   removeRoom(id: string): Promise<void>
@@ -221,6 +233,14 @@ export const useStore = create<StoreState>((set) => ({
       throw err
     } finally {
       set({ loading: false })
+    }
+  },
+
+  async notifyApproval(id: string) {
+    try {
+      await supabase.functions.invoke('send-approval-email', { body: { bookingId: id } })
+    } catch (err) {
+      console.warn('[notifyApproval] email send failed:', err)
     }
   },
 

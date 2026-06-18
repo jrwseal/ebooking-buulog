@@ -12,11 +12,13 @@ export interface Booking {
   roomId: string
   title: string
   requester: string
+  email: string
   date: string
   start: string
   end: string
   purpose: string
   status: Status
   reviewNote: string
+  bookingCode: string
   createdAt: number
 }

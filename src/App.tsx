@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   Plus, Lock, LogOut, KeyRound,
-  LayoutGrid, CalendarRange, CalendarDays, List,
+  LayoutGrid, CalendarRange, CalendarDays, List, User,
   CheckCircle2, Hourglass, MapPin, X,
   ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap,
 } from 'lucide-react'
@@ -11,6 +11,7 @@ import MonthView from './components/views/MonthView'
 import WeekView from './components/views/WeekView'
 import DayView from './components/views/DayView'
 import AgendaView from './components/views/AgendaView'
+import MyBookingsView from './components/views/MyBookingsView'
 import BookingModal from './components/modals/BookingModal'
 import BookingDetailModal from './components/modals/BookingDetailModal'
 import ApprovalQueue from './components/modals/ApprovalQueue'
@@ -19,14 +20,14 @@ import RoomManagerModal from './components/modals/RoomManagerModal'
 import { pad, fmtDate, todayStr } from './utils/datetime'
 import type { Booking, Status } from './types'
 
-type ViewMode = 'month' | 'week' | 'day' | 'agenda'
+type ViewMode = 'month' | 'week' | 'day' | 'agenda' | 'mine'
 type ToastState = { msg: string; kind: 'ok' | 'error' }
 
 export default function App() {
   const {
     rooms, bookings, loading,
     fetchRooms, fetchBookings, fetchPin,
-    pin, updateStatus, removeBooking, changePin, clearBookings,
+    pin, updateStatus, removeBooking, changePin, clearBookings, notifyApproval,
   } = useStore()
 
   const [role, setRole] = useState<'requester' | 'approver'>('requester')
@@ -49,6 +50,7 @@ export default function App() {
   const [pinModal, setPinModal] = useState(false)
   const [showRoomManager, setShowRoomManager] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [myEmail] = useState(() => localStorage.getItem('ebooking_email') ?? '')
 
   useEffect(() => {
     void fetchRooms()
@@ -116,6 +118,7 @@ export default function App() {
     try {
       await updateStatus(id, status, note)
       flash(status === 'approved' ? 'อนุมัติคำขอแล้ว' : 'ปฏิเสธคำขอแล้ว')
+      if (status === 'approved') void notifyApproval(id)
     } catch {
       flash('บันทึกไม่สำเร็จ ลองอีกครั้ง', 'error')
     }
@@ -268,7 +271,7 @@ export default function App() {
             aria-label="มุมมองตาราง"
             className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5"
             onKeyDown={(e) => {
-              const modes: ViewMode[] = ['day', 'week', 'month', 'agenda']
+              const modes: ViewMode[] = ['day', 'week', 'month', 'agenda', 'mine']
               const i = modes.indexOf(view)
               if (e.key === 'ArrowRight') { e.preventDefault(); setView(modes[(i + 1) % modes.length]) }
               else if (e.key === 'ArrowLeft') { e.preventDefault(); setView(modes[(i + 3) % modes.length]) }
@@ -278,6 +281,7 @@ export default function App() {
             <ToolTab id="tab-week" controls="panel-week" active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} aria-hidden="true" />} label="สัปดาห์" />
             <ToolTab id="tab-month" controls="panel-month" active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} aria-hidden="true" />} label="เดือน" />
             <ToolTab id="tab-agenda" controls="panel-agenda" active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} aria-hidden="true" />} label="รายการ" />
+            <ToolTab id="tab-mine" controls="panel-mine" active={view === 'mine'} onClick={() => setView('mine')} icon={<User size={15} aria-hidden="true" />} label="ของฉัน" />
           </div>
 
           {role === 'approver' && authed && (
@@ -401,6 +405,11 @@ export default function App() {
         {view === 'agenda' && (
           <div id="panel-agenda" role="tabpanel" aria-labelledby="tab-agenda">
             <AgendaView role={role} onOpenDetail={openDetail} />
+          </div>
+        )}
+        {view === 'mine' && (
+          <div id="panel-mine" role="tabpanel" aria-labelledby="tab-mine">
+            <MyBookingsView myEmail={myEmail} onOpenDetail={openDetail} />
           </div>
         )}
       </main>

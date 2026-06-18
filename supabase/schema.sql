@@ -13,18 +13,24 @@ create table if not exists rooms (
 
 -- ── การจอง ────────────────────────────────────────────────
 create table if not exists bookings (
-  id          uuid primary key default gen_random_uuid(),
-  room_id     text references rooms(id),
-  title       text not null,
-  requester   text not null,
-  date        date not null,
-  start_time  time not null,
-  end_time    time not null,
-  purpose     text default '',
-  status      text not null default 'pending',  -- pending | approved | rejected
-  review_note text default '',
-  created_at  timestamptz default now()
+  id               uuid primary key default gen_random_uuid(),
+  room_id          text references rooms(id),
+  title            text not null,
+  requester        text not null,
+  requester_email  text default '',
+  date             date not null,
+  start_time       time not null,
+  end_time         time not null,
+  purpose          text default '',
+  status           text not null default 'pending',  -- pending | approved | rejected
+  review_note      text default '',
+  booking_code     text default '',
+  created_at       timestamptz default now()
 );
+
+-- เพิ่ม columns ในตารางที่มีอยู่แล้ว (รันหากมีตารางอยู่แล้ว):
+-- alter table bookings add column if not exists requester_email text default '';
+-- alter table bookings add column if not exists booking_code text default '';
 
 -- ── ตั้งค่า (รหัส admin) ───────────────────────────────────
 create table if not exists settings (

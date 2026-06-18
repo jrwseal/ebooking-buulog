@@ -23,6 +23,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     roomId: defaultRoomId ?? rooms[0]?.id ?? '',
     title: '',
     requester: '',
+    email: '',
     date: defaultDate || todayStr,
     start: defaultHour !== undefined ? `${pad(defaultHour)}:00` : '09:00',
     end: defaultHour !== undefined ? `${pad(Math.min(20, defaultHour + 1))}:00` : '12:00',
@@ -68,6 +69,10 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
   async function handleSubmit() {
     if (!form.title.trim() || !form.requester.trim()) {
       onError('กรอกหัวข้อและชื่อผู้จองให้ครบ')
+      return
+    }
+    if (!adminMode && !/.+@.+\..+/.test(form.email.trim())) {
+      onError('กรอก email ให้ถูกต้อง')
       return
     }
     if (toMin(form.end) <= toMin(form.start)) {
@@ -129,7 +134,8 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     }
     setSubmitting(true)
     try {
-      await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim() })
+      await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim(), email: form.email.trim() })
+      localStorage.setItem('ebooking_email', form.email.trim())
       onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
       onClose()
     } catch {
@@ -198,6 +204,18 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
               className="input"
             />
           </Field>
+
+          {!adminMode && (
+            <Field label="อีเมล *">
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => update('email', e.target.value)}
+                placeholder="สำหรับรับแจ้งเตือนและดูการจองของคุณ"
+                className="input"
+              />
+            </Field>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             <div className="col-span-2 sm:col-span-1">
