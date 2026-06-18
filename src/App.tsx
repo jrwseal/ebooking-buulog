@@ -185,7 +185,7 @@ export default function App() {
             />
             <div className="border-l border-white/25 pl-3">
               <h1 className="text-sm sm:text-base font-bold leading-tight">ระบบจองห้องเรียน</h1>
-              <p className="text-blue-200 text-xs">คณะโลจิสติกส์</p>
+              <p className="text-buu-on-muted text-xs">คณะโลจิสติกส์</p>
             </div>
           </div>
 
@@ -193,7 +193,7 @@ export default function App() {
             <button
               onClick={() => switchRole('requester')}
               className={`px-3 py-1.5 rounded-md font-medium transition ${
-                role === 'requester' ? 'bg-white text-buu' : 'text-blue-100 hover:text-white'
+                role === 'requester' ? 'bg-white text-buu' : 'text-buu-on hover:text-white'
               }`}
             >
               ผู้จอง
@@ -201,7 +201,7 @@ export default function App() {
             <button
               onClick={() => switchRole('approver')}
               className={`px-3 py-1.5 rounded-md font-medium transition flex items-center gap-1 ${
-                role === 'approver' ? 'bg-white text-buu' : 'text-blue-100 hover:text-white'
+                role === 'approver' ? 'bg-white text-buu' : 'text-buu-on hover:text-white'
               }`}
             >
               {!authed && <Lock size={13} />} ผู้อนุมัติ
@@ -212,7 +212,7 @@ export default function App() {
             <button
               onClick={logout}
               title="ออกจากระบบ"
-              className="text-blue-100 hover:text-white p-2 rounded-md hover:bg-white/10"
+              className="text-buu-on hover:text-white p-2 rounded-md hover:bg-white/10"
             >
               <LogOut size={17} />
             </button>

@@ -4,11 +4,13 @@
 
 @theme {
   /* BUU navy scale — hue 253, perceptually uniform steps */
-  --color-buu:        oklch(31% 0.11 253);   /* primary brand navy */
-  --color-buu-dark:   oklch(22% 0.09 253);   /* hover / pressed */
-  --color-buu-mid:    oklch(51% 0.09 252);   /* selection rings, active borders */
-  --color-buu-subtle: oklch(67% 0.07 248);   /* hover borders, dividers */
-  --color-buu-tint:   oklch(96% 0.015 253);  /* background tints, today highlight */
+  --color-buu:          oklch(31% 0.11 253);   /* primary brand navy */
+  --color-buu-dark:     oklch(22% 0.09 253);   /* hover / pressed */
+  --color-buu-mid:      oklch(51% 0.09 252);   /* selection rings, active borders */
+  --color-buu-subtle:   oklch(67% 0.07 248);   /* hover borders, dividers */
+  --color-buu-tint:     oklch(96% 0.015 253);  /* background tints, today highlight */
+  --color-buu-on:       oklch(92% 0.025 253);  /* primary text on BUU dark surfaces */
+  --color-buu-on-muted: oklch(74% 0.04 253);   /* secondary text on BUU dark surfaces */
   --font-sans: 'Sarabun', ui-sans-serif, system-ui, sans-serif;
 }
 

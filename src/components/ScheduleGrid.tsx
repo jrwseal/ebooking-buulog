@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { STATUS, pad, toMin, todayStr } from '../utils/datetime'
 import { START_H, END_H, PXPM, HOUR_H, BODY_H, HEAD_H, HOURS } from '../lib/config'
 import type { Booking } from '../types'
@@ -62,6 +63,7 @@ function layoutColumn(items: Booking[]): LaidOut[] {
 export default function ScheduleGrid({ columns, showRoom, maskDetails = false, onSelect, onCreate }: ScheduleGridProps) {
   const now = new Date()
   const nowMin = now.getHours() * 60 + now.getMinutes()
+  const columnLayouts = useMemo(() => columns.map((col) => layoutColumn(col.items)), [columns])
 
   return (
     <div className="overflow-x-auto">
@@ -83,8 +85,8 @@ export default function ScheduleGrid({ columns, showRoom, maskDetails = false, o
         </div>
 
         {/* Columns */}
-        {columns.map((col) => {
-          const laid = layoutColumn(col.items)
+        {columns.map((col, colIdx) => {
+          const laid = columnLayouts[colIdx]
           return (
             <div key={col.key} className="w-28 sm:w-36 shrink-0 border-l border-slate-100">
               {/* Column header */}
