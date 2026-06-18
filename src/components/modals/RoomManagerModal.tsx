@@ -70,7 +70,7 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
+            className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />
           </button>
@@ -90,7 +90,7 @@ export default function RoomManagerModal({ onClose }: { onClose(): void }) {
                 <button
                   onClick={() => void handleRemove(r.id, r.name)}
                   disabled={busy}
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition opacity-0 group-hover:opacity-100 disabled:opacity-30"
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-30"
                 >
                   <Trash2 size={14} />
                 </button>

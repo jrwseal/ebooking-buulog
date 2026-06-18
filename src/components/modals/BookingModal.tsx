@@ -81,7 +81,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
+            className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />
           </button>
@@ -116,10 +116,12 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-2.5">
-            <Field label="วันที่">
-              <input type="date" value={form.date} onChange={(e) => update('date', e.target.value)} className="input" />
-            </Field>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <div className="col-span-2 sm:col-span-1">
+              <Field label="วันที่">
+                <input type="date" value={form.date} onChange={(e) => update('date', e.target.value)} className="input" />
+              </Field>
+            </div>
             <Field label="เริ่ม">
               <input type="time" value={form.start} onChange={(e) => update('start', e.target.value)} className="input" />
             </Field>

@@ -303,11 +303,14 @@ export default function App() {
         </div>
 
         {/* Room filter buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3 scrollbar-none">
-          <RoomFilterBtn active={roomFilter === 'all'} onClick={() => setRoomFilter('all')} label="ทุกห้อง" />
-          {rooms.map((r) => (
-            <RoomFilterBtn key={r.id} active={roomFilter === r.id} onClick={() => setRoomFilter(r.id)} label={r.name} />
-          ))}
+        <div className="relative mb-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <RoomFilterBtn active={roomFilter === 'all'} onClick={() => setRoomFilter('all')} label="ทุกห้อง" />
+            {rooms.map((r) => (
+              <RoomFilterBtn key={r.id} active={roomFilter === r.id} onClick={() => setRoomFilter(r.id)} label={r.name} />
+            ))}
+          </div>
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-50 to-transparent" />
         </div>
 
         {/* Views */}
@@ -506,7 +509,7 @@ function LoginModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (pin
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
+            className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />
           </button>

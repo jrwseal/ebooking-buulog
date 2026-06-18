@@ -42,7 +42,7 @@ export default function ApprovalQueue({ onClose, onDecide }: ApprovalQueueProps)
           <button
             onClick={onClose}
             aria-label="ปิด"
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
+            className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500"
           >
             <X size={18} />
           </button>

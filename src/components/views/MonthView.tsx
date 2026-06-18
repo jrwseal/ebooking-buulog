@@ -189,7 +189,7 @@ function NavBtn({ onClick, children }: { onClick: () => void; children: React.Re
   return (
     <button
       onClick={onClick}
-      className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-600"
+      className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-600"
     >
       {children}
     </button>
