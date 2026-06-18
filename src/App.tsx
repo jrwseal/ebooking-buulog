@@ -309,6 +309,7 @@ export default function App() {
             setCursor={setCursor}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            role={role}
             onSwitchToDayView={() => setView('day')}
             onBookRoom={openBooking}
           />

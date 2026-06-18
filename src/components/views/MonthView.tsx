@@ -10,6 +10,7 @@ interface MonthViewProps {
   setCursor: (d: Date) => void
   selectedDate: string
   setSelectedDate: (s: string) => void
+  role: 'requester' | 'approver'
   onSwitchToDayView: () => void
   onBookRoom: (date: string) => void
 }
@@ -19,6 +20,7 @@ export default function MonthView({
   setCursor,
   selectedDate,
   setSelectedDate,
+  role,
   onSwitchToDayView,
   onBookRoom,
 }: MonthViewProps) {
@@ -162,7 +164,7 @@ export default function MonthView({
         ) : (
           <div className="space-y-2.5">
             {dayList.map((b) => (
-              <BookingRow key={b.id} b={b} roomName={roomName} />
+              <BookingRow key={b.id} b={b} roomName={roomName} masked={role === 'requester'} />
             ))}
             <button
               onClick={() => onBookRoom(selectedDate)}
@@ -188,19 +190,27 @@ function NavBtn({ onClick, children }: { onClick: () => void; children: React.Re
   )
 }
 
-function BookingRow({ b, roomName }: { b: Booking; roomName: (id: string) => string }) {
+function BookingRow({
+  b, roomName, masked,
+}: {
+  b: Booking
+  roomName: (id: string) => string
+  masked: boolean
+}) {
   const S = STATUS[b.status]
   return (
     <div className="border border-slate-200 rounded-lg p-2.5">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-semibold text-sm truncate">{b.title}</p>
+          <p className="font-semibold text-sm truncate">{masked ? 'จองแล้ว' : b.title}</p>
           <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
             <Clock size={12} /> {b.start}–{b.end} · {roomName(b.roomId)}
           </p>
-          <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-            <Users size={12} /> {b.requester}
-          </p>
+          {!masked && (
+            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+              <Users size={12} /> {b.requester}
+            </p>
+          )}
         </div>
         <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full border ${S.chip}`}>
           {S.label}
