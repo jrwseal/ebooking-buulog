@@ -181,9 +181,9 @@ export default function BookingDetailModal({
             </div>
           )}
 
-          {b.status === 'approved' && b.bookingCode && !b.checkedIn && (
+          {b.status === 'approved' && !b.checkedIn && (
             <div className="flex flex-col items-center gap-2 py-2">
-              <QRCodeSVG value={b.bookingCode} size={140} includeMargin />
+              <QRCodeSVG value={b.bookingCode || b.id} size={140} includeMargin />
               <p className="text-xs text-slate-400 flex items-center gap-1">
                 <ScanLine size={12} aria-hidden="true" /> ให้แอดมินสแกนเพื่อยืนยันการใช้ห้อง
               </p>

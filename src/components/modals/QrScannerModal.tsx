@@ -30,8 +30,9 @@ export default function QrScannerModal({ onClose, onOpenDetail }: QrScannerModal
       (code) => {
         scanner.stop().catch(() => {})
         setScanning(false)
+        const c = code.trim()
         const booking = bookings.find(
-          (b) => b.bookingCode === code.trim() && b.status === 'approved',
+          (b) => b.status === 'approved' && (b.bookingCode === c || b.id === c),
         )
         if (booking) { setFound(booking); setNotFound(false) }
         else setNotFound(true)

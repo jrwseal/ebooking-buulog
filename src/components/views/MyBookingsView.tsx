@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Clock, MapPin, Search } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { STATUS, thaiFull, todayStr } from '../../utils/datetime'
@@ -9,43 +9,68 @@ interface MyBookingsViewProps {
   onOpenDetail: (b: Booking) => void
 }
 
-export default function MyBookingsView({ myEmail, onOpenDetail }: MyBookingsViewProps) {
+export default function MyBookingsView({ myEmail: defaultEmail, onOpenDetail }: MyBookingsViewProps) {
   const { rooms, bookings } = useStore()
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? id
 
+  const [input, setInput] = useState(defaultEmail)
+  const [query, setQuery] = useState(defaultEmail)
+
+  function search() {
+    const v = input.trim()
+    setQuery(v)
+    if (v) localStorage.setItem('ebooking_email', v)
+  }
+
   const mine = useMemo(
     () =>
-      bookings
-        .filter((b) => b.email.toLowerCase() === myEmail.toLowerCase())
-        .sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start)),
-    [bookings, myEmail],
+      query
+        ? bookings
+            .filter((b) => b.email.toLowerCase() === query.toLowerCase())
+            .sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start))
+        : [],
+    [bookings, query],
   )
 
   const upcoming = mine.filter((b) => b.date >= todayStr && b.status !== 'rejected')
   const past     = mine.filter((b) => b.date < todayStr || b.status === 'rejected')
 
-  if (!myEmail) {
-    return (
-      <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
-        <Search size={30} className="mx-auto mb-2 opacity-40" />
-        <p>ยังไม่มีข้อมูล</p>
-        <p className="mt-1 text-xs">จองห้องโดยระบุอีเมลของคุณเพื่อดูการจองที่นี่</p>
-      </div>
-    )
-  }
-
-  if (mine.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
-        <Search size={30} className="mx-auto mb-2 opacity-40" />
-        <p>ไม่พบการจองสำหรับ <span className="font-medium text-slate-600">{myEmail}</span></p>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-5">
-      <p className="text-xs text-slate-400">แสดงการจองของ <span className="font-medium text-slate-600">{myEmail}</span></p>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <input
+          type="email"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && search()}
+          placeholder="อีเมลที่ใช้ตอนจอง"
+          className="input flex-1"
+        />
+        <button
+          onClick={search}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark text-sm"
+        >
+          <Search size={15} /> ค้นหา
+        </button>
+      </div>
+
+      {!query && (
+        <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
+          <Search size={30} className="mx-auto mb-2 opacity-40" />
+          <p className="text-xs">ใส่อีเมลที่ใช้ตอนจองห้องแล้วกด ค้นหา</p>
+        </div>
+      )}
+
+      {query && mine.length === 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
+          <Search size={30} className="mx-auto mb-2 opacity-40" />
+          <p>ไม่พบการจองสำหรับ <span className="font-medium text-slate-600">{query}</span></p>
+        </div>
+      )}
+
+      {mine.length > 0 && (
+        <>
+        <p className="text-xs text-slate-400">แสดงการจองของ <span className="font-medium text-slate-600">{query}</span></p>
 
       {upcoming.length > 0 && (
         <Section title="ที่กำลังจะมาถึง / รออนุมัติ">
@@ -57,6 +82,8 @@ export default function MyBookingsView({ myEmail, onOpenDetail }: MyBookingsView
         <Section title="ผ่านมาแล้ว / ไม่อนุมัติ">
           {past.map((b) => <BookingRow key={b.id} b={b} roomName={roomName(b.roomId)} onOpen={onOpenDetail} />)}
         </Section>
+      )}
+        </>
       )}
     </div>
   )
