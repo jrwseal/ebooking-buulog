@@ -33,7 +33,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     (b) =>
       b.roomId === form.roomId &&
       b.date === form.date &&
-      b.status === 'approved' &&
+      b.status !== 'rejected' &&
       overlaps(form.start, form.end, b.start, b.end),
   )
 
@@ -48,6 +48,10 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     }
     if (toMin(form.end) <= toMin(form.start)) {
       onError('เวลาสิ้นสุดต้องหลังเวลาเริ่ม')
+      return
+    }
+    if (liveConflicts.length > 0) {
+      onError('ช่วงเวลานี้ถูกจองแล้ว ไม่สามารถส่งคำขอได้')
       return
     }
     setSubmitting(true)
@@ -142,12 +146,12 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
 
           {liveConflicts.length > 0 && (
             <div className="flex gap-2 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg p-2.5">
-              <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+              <AlertTriangle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                ห้องนี้ถูกจอง (อนุมัติแล้ว) ทับช่วงเวลานี้:{' '}
-                {liveConflicts.map((c) => `${c.start}–${c.end}`).join(', ')}
+                ห้องนี้ถูกจองทับช่วงเวลานี้แล้ว:{' '}
+                <span className="font-medium">{liveConflicts.map((c) => `${c.start}–${c.end}`).join(', ')}</span>
                 <br />
-                <span className="text-rose-500">ส่งคำขอได้ แต่ผู้อนุมัติอาจปฏิเสธ</span>
+                <span className="text-rose-500">ไม่สามารถส่งคำขอได้ กรุณาเลือกเวลาอื่น</span>
               </div>
             </div>
           )}
@@ -161,7 +165,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
             </button>
             <button
               onClick={() => void handleSubmit()}
-              disabled={submitting}
+              disabled={submitting || liveConflicts.length > 0}
               className="flex-1 py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-60"
             >
               {submitting ? 'กำลังส่ง…' : 'ส่งคำขอจอง'}
