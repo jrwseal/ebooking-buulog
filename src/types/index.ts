@@ -20,5 +20,6 @@ export interface Booking {
   status: Status
   reviewNote: string
   bookingCode: string
+  checkedIn: boolean
   createdAt: number
 }

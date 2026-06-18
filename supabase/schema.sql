@@ -25,12 +25,14 @@ create table if not exists bookings (
   status           text not null default 'pending',  -- pending | approved | rejected
   review_note      text default '',
   booking_code     text default '',
+  checked_in       boolean default false,
   created_at       timestamptz default now()
 );
 
 -- เพิ่ม columns ในตารางที่มีอยู่แล้ว (รันหากมีตารางอยู่แล้ว):
 -- alter table bookings add column if not exists requester_email text default '';
 -- alter table bookings add column if not exists booking_code text default '';
+-- alter table bookings add column if not exists checked_in boolean default false;
 
 -- ── ตั้งค่า (รหัส admin) ───────────────────────────────────
 create table if not exists settings (

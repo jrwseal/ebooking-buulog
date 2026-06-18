@@ -17,12 +17,13 @@ interface BookingRow {
   status: string
   review_note: string
   booking_code: string
+  checked_in: boolean
   created_at: string
 }
 
 // ---- Public input type ---------------------------------------------------
 
-export type BookingInput = Omit<Booking, 'id' | 'status' | 'reviewNote' | 'bookingCode' | 'createdAt'>
+export type BookingInput = Omit<Booking, 'id' | 'status' | 'reviewNote' | 'bookingCode' | 'checkedIn' | 'createdAt'>
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 function generateCode(): string {
@@ -45,6 +46,7 @@ function rowToBooking(row: BookingRow): Booking {
     status: row.status as Status,
     reviewNote: row.review_note,
     bookingCode: row.booking_code ?? '',
+    checkedIn: row.checked_in ?? false,
     createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
   }
 }
@@ -81,6 +83,7 @@ interface StoreState {
   addSchedules(inputs: BookingInput[]): Promise<void>
   updateStatus(id: string, status: Status, note?: string): Promise<void>
   notifyApproval(id: string): Promise<void>
+  checkIn(id: string): Promise<void>
   removeBooking(id: string): Promise<void>
   addRoom(room: Room): Promise<void>
   removeRoom(id: string): Promise<void>
@@ -242,6 +245,18 @@ export const useStore = create<StoreState>((set) => ({
     } catch (err) {
       console.warn('[notifyApproval] email send failed:', err)
     }
+  },
+
+  async checkIn(id: string) {
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ checked_in: true })
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    const updated = rowToBooking(data as BookingRow)
+    set((state) => ({ bookings: state.bookings.map((b) => (b.id === id ? updated : b)) }))
   },
 
   async removeBooking(id: string) {

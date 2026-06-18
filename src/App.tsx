@@ -3,7 +3,7 @@ import {
   Plus, Lock, LogOut, KeyRound,
   LayoutGrid, CalendarRange, CalendarDays, List, User,
   CheckCircle2, Hourglass, MapPin, X,
-  ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap,
+  ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap, ScanLine,
 } from 'lucide-react'
 import { useFocusTrap } from './hooks/useFocusTrap'
 import { useStore } from './store/useStore'
@@ -17,6 +17,7 @@ import BookingDetailModal from './components/modals/BookingDetailModal'
 import ApprovalQueue from './components/modals/ApprovalQueue'
 import ChangePinModal from './components/modals/ChangePinModal'
 import RoomManagerModal from './components/modals/RoomManagerModal'
+import QrScannerModal from './components/modals/QrScannerModal'
 import { pad, fmtDate, todayStr } from './utils/datetime'
 import type { Booking, Status } from './types'
 
@@ -49,6 +50,7 @@ export default function App() {
   const [showApprovals, setShowApprovals] = useState(false)
   const [pinModal, setPinModal] = useState(false)
   const [showRoomManager, setShowRoomManager] = useState(false)
+  const [showQrScanner, setShowQrScanner] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [myEmail] = useState(() => localStorage.getItem('ebooking_email') ?? '')
 
@@ -293,6 +295,12 @@ export default function App() {
                 <GraduationCap size={16} aria-hidden="true" /> ตารางสอน
               </button>
               <button
+                onClick={() => setShowQrScanner(true)}
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
+              >
+                <ScanLine size={16} aria-hidden="true" /> สแกน QR
+              </button>
+              <button
                 onClick={() => setShowApprovals(true)}
                 className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
               >
@@ -457,6 +465,14 @@ export default function App() {
       {/* Room manager modal */}
       {showRoomManager && (
         <RoomManagerModal onClose={() => setShowRoomManager(false)} />
+      )}
+
+      {/* QR scanner modal */}
+      {showQrScanner && (
+        <QrScannerModal
+          onClose={() => setShowQrScanner(false)}
+          onOpenDetail={(b) => { setShowQrScanner(false); openDetail(b) }}
+        />
       )}
 
       {/* Change PIN modal */}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { X, CalendarDays, Clock, MapPin, Users, AlertTriangle, Check, Trash2, CalendarPlus, ExternalLink } from 'lucide-react'
+import { X, CalendarDays, Clock, MapPin, Users, AlertTriangle, Check, Trash2, CalendarPlus, ExternalLink, ScanLine } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { STATUS, thaiFull, overlaps } from '../../utils/datetime'
 import { useStore } from '../../store/useStore'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
@@ -172,6 +173,20 @@ export default function BookingDetailModal({
             <div className="flex items-center gap-2 bg-buu-tint border border-buu/20 rounded-lg px-3 py-2">
               <span className="text-xs text-buu-mid">รหัสการจอง</span>
               <span className="font-mono font-bold text-sm text-buu tracking-wider">{b.bookingCode}</span>
+              {b.checkedIn && (
+                <span className="ml-auto flex items-center gap-1 text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                  <Check size={11} /> เช็คอินแล้ว
+                </span>
+              )}
+            </div>
+          )}
+
+          {b.status === 'approved' && b.bookingCode && !b.checkedIn && (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <QRCodeSVG value={b.bookingCode} size={140} includeMargin />
+              <p className="text-xs text-slate-400 flex items-center gap-1">
+                <ScanLine size={12} aria-hidden="true" /> ให้แอดมินสแกนเพื่อยืนยันการใช้ห้อง
+              </p>
             </div>
           )}
 
