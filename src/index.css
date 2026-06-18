@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-brand: oklch(46% 0.12 180);
+  --color-brand-light: oklch(92% 0.03 180);
+  --color-brand-dark: oklch(35% 0.1 180);
+  --color-buu: #1b3a6b;
+  --color-buu-dark: #122a52;
+  --font-sans: 'Sarabun', ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+/* Keyboard focus ring — consistent across all interactive elements */
+:focus-visible {
+  outline: 2px solid #1b3a6b;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: .5rem;
+  padding: .5rem .65rem;
+  font-size: .875rem;
+  outline: none;
+  background: #fff;
+}
+.input:focus {
+  border-color: #1b3a6b;
+  box-shadow: 0 0 0 3px rgba(27, 58, 107, .15);
+}
