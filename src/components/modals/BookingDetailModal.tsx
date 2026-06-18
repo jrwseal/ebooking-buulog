@@ -1,9 +1,52 @@
 import { useState } from 'react'
-import { X, CalendarDays, Clock, MapPin, Users, AlertTriangle, Check, Trash2 } from 'lucide-react'
+import { X, CalendarDays, Clock, MapPin, Users, AlertTriangle, Check, Trash2, CalendarPlus, ExternalLink } from 'lucide-react'
 import { STATUS, thaiFull, overlaps } from '../../utils/datetime'
 import { useStore } from '../../store/useStore'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { Booking, Status } from '../../types'
+
+function toUtcIcal(dateStr: string, timeStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const [h, min] = timeStr.split(':').map(Number)
+  const utcMs = Date.UTC(y, m - 1, d, h, min, 0) - 7 * 60 * 60 * 1000 // Bangkok = UTC+7
+  const dt = new Date(utcMs)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${dt.getUTCFullYear()}${p(dt.getUTCMonth() + 1)}${p(dt.getUTCDate())}T${p(dt.getUTCHours())}${p(dt.getUTCMinutes())}00Z`
+}
+
+function downloadIcs(b: Booking, room: string, title: string) {
+  const dtStart = toUtcIcal(b.date, b.start)
+  const dtEnd   = toUtcIcal(b.date, b.end)
+  const dtstamp = toUtcIcal(new Date().toISOString().slice(0, 10), `${String(new Date().getUTCHours() + 7).padStart(2, '0')}:${String(new Date().getUTCMinutes()).padStart(2, '0')}`)
+  const desc = `ผู้จอง: ${b.requester}${b.purpose ? '\\n' + b.purpose : ''}`
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//eBooking-BUULOG//TH',
+    'BEGIN:VEVENT',
+    `UID:${b.id}@ebooking-buulog`,
+    `DTSTAMP:${dtstamp}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${desc}`,
+    `LOCATION:${room}`,
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }))
+  a.download = `booking-${b.date}.ics`
+  a.click()
+}
+
+function googleCalUrl(b: Booking, room: string, title: string): string {
+  const p = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: `${toUtcIcal(b.date, b.start)}/${toUtcIcal(b.date, b.end)}`,
+    details: `ผู้จอง: ${b.requester}${b.purpose ? '\n' + b.purpose : ''}`,
+    location: room,
+  })
+  return `https://calendar.google.com/calendar/render?${p}`
+}
 
 interface BookingDetailModalProps {
   booking: Booking
@@ -42,6 +85,7 @@ export default function BookingDetailModal({
 
   const canDecide = role === 'approver' && b.status === 'pending'
   const canDelete = role === 'approver' || b.status === 'pending'
+  const calTitle = role === 'approver' ? b.title : `การจองห้อง ${roomName(b.roomId)}`
 
   function handleDecide(status: Status) {
     onDecide(b.id, status, note)
@@ -122,6 +166,25 @@ export default function BookingDetailModal({
                 <p className="text-sm text-slate-500">หมายเหตุผู้อนุมัติ: {b.reviewNote}</p>
               )}
             </>
+          )}
+
+          {b.status === 'approved' && (
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => downloadIcs(b, roomName(b.roomId), calTitle)}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:border-buu-subtle hover:text-buu transition"
+              >
+                <CalendarPlus size={13} aria-hidden="true" /> บันทึก .ics
+              </button>
+              <a
+                href={googleCalUrl(b, roomName(b.roomId), calTitle)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:border-buu-subtle hover:text-buu transition"
+              >
+                <ExternalLink size={13} aria-hidden="true" /> Google Calendar
+              </a>
+            </div>
           )}
 
           {conflicts.length > 0 && (
