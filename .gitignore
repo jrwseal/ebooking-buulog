@@ -26,9 +26,11 @@ Thumbs.db
 
 # Dev artifacts
 .playwright-mcp/
-*.png
 *.jpg
 *.jpeg
+
+# Screenshots (root level only)
+/*.png
 
 # Logs
 *.log
