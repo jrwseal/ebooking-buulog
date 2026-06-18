@@ -3,7 +3,7 @@ import {
   Plus, Lock, LogOut, KeyRound,
   LayoutGrid, CalendarRange, CalendarDays, List,
   CheckCircle2, Hourglass, MapPin, X,
-  ClipboardCheck, RotateCcw, Trash2,
+  ClipboardCheck, RotateCcw, Trash2, DoorOpen,
 } from 'lucide-react'
 import { useStore } from './store/useStore'
 import MonthView from './components/views/MonthView'
@@ -14,6 +14,7 @@ import BookingModal from './components/modals/BookingModal'
 import BookingDetailModal from './components/modals/BookingDetailModal'
 import ApprovalQueue from './components/modals/ApprovalQueue'
 import ChangePinModal from './components/modals/ChangePinModal'
+import RoomManagerModal from './components/modals/RoomManagerModal'
 import { pad, fmtDate, todayStr } from './utils/datetime'
 import type { Booking, Status } from './types'
 
@@ -42,6 +43,7 @@ export default function App() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [showApprovals, setShowApprovals] = useState(false)
   const [pinModal, setPinModal] = useState(false)
+  const [showRoomManager, setShowRoomManager] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [pinInput, setPinInput] = useState('')
 
@@ -269,6 +271,12 @@ export default function App() {
                 )}
               </button>
               <button
+                onClick={() => setShowRoomManager(true)}
+                className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-[#7b9fd4] hover:text-[#1b3a6b] transition"
+              >
+                <DoorOpen size={16} /> ห้อง
+              </button>
+              <button
                 onClick={() => setPinModal(true)}
                 className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-slate-600 transition"
               >
@@ -363,6 +371,11 @@ export default function App() {
             await handleDecide(id, status, note)
           }}
         />
+      )}
+
+      {/* Room manager modal */}
+      {showRoomManager && (
+        <RoomManagerModal onClose={() => setShowRoomManager(false)} />
       )}
 
       {/* Change PIN modal */}

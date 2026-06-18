@@ -68,6 +68,8 @@ interface StoreState {
   addBooking(input: BookingInput): Promise<void>
   updateStatus(id: string, status: Status, note?: string): Promise<void>
   removeBooking(id: string): Promise<void>
+  addRoom(room: Room): Promise<void>
+  removeRoom(id: string): Promise<void>
   changePin(next: string): Promise<void>
   clearBookings(): Promise<void>
 }
@@ -182,6 +184,40 @@ export const useStore = create<StoreState>((set) => ({
       }))
     } catch (err) {
       console.error('[removeBooking]', err)
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  async addRoom(room: Room) {
+    set({ loading: true })
+    try {
+      const { data, error } = await supabase
+        .from('rooms')
+        .insert({ id: room.id, name: room.name, type: room.type, capacity: room.capacity })
+        .select()
+        .single()
+      if (error) throw error
+      set((state) => ({
+        rooms: [...state.rooms, data as Room].sort((a, b) => a.id.localeCompare(b.id)),
+      }))
+    } catch (err) {
+      console.error('[addRoom]', err)
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  async removeRoom(id: string) {
+    set({ loading: true })
+    try {
+      const { error } = await supabase.from('rooms').delete().eq('id', id)
+      if (error) throw error
+      set((state) => ({ rooms: state.rooms.filter((r) => r.id !== id) }))
+    } catch (err) {
+      console.error('[removeRoom]', err)
       throw err
     } finally {
       set({ loading: false })
