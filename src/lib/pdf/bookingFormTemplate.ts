@@ -63,7 +63,7 @@ export function buildBookingFormElement(data: BookingFormData): HTMLDivElement {
   const header = document.createElement('div')
   header.style.cssText = 'display:flex;align-items:center;gap:16px;margin-bottom:8px;'
   const logo = document.createElement('img')
-  logo.src = '/buulog.png'
+  logo.src = '/logo_buu.png'
   logo.style.cssText = 'width:56px;height:56px;object-fit:contain;'
   const titleWrap = document.createElement('div')
   titleWrap.style.cssText = 'flex:1;text-align:center;'
