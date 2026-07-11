@@ -3,13 +3,14 @@ import {
   Plus, Lock, LogOut, KeyRound,
   LayoutGrid, CalendarRange, CalendarDays, List, User,
   CheckCircle2, Hourglass, MapPin, X,
-  ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap, ScanLine,
+  ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap, ScanLine, Table2,
 } from 'lucide-react'
 import { useFocusTrap } from './hooks/useFocusTrap'
 import { useStore } from './store/useStore'
 import MonthView from './components/views/MonthView'
 import WeekView from './components/views/WeekView'
 import DayView from './components/views/DayView'
+import OverviewView from './components/views/OverviewView'
 import AgendaView from './components/views/AgendaView'
 import MyBookingsView from './components/views/MyBookingsView'
 import BookingModal from './components/modals/BookingModal'
@@ -21,7 +22,7 @@ import QrScannerModal from './components/modals/QrScannerModal'
 import { pad, fmtDate, todayStr } from './utils/datetime'
 import type { Booking, Status } from './types'
 
-type ViewMode = 'month' | 'week' | 'day' | 'agenda' | 'mine'
+type ViewMode = 'month' | 'week' | 'day' | 'overview' | 'agenda' | 'mine'
 type ToastState = { msg: string; kind: 'ok' | 'error' }
 
 export default function App() {
@@ -273,13 +274,14 @@ export default function App() {
             aria-label="มุมมองตาราง"
             className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5"
             onKeyDown={(e) => {
-              const modes: ViewMode[] = ['day', 'week', 'month', 'agenda', 'mine']
+              const modes: ViewMode[] = ['day', 'overview', 'week', 'month', 'agenda', 'mine']
               const i = modes.indexOf(view)
               if (e.key === 'ArrowRight') { e.preventDefault(); setView(modes[(i + 1) % modes.length]) }
               else if (e.key === 'ArrowLeft') { e.preventDefault(); setView(modes[(i + 3) % modes.length]) }
             }}
           >
             <ToolTab id="tab-day" controls="panel-day" active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} aria-hidden="true" />} label="วัน" />
+            <ToolTab id="tab-overview" controls="panel-overview" active={view === 'overview'} onClick={() => setView('overview')} icon={<Table2 size={15} aria-hidden="true" />} label="ภาพรวม" />
             <ToolTab id="tab-week" controls="panel-week" active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} aria-hidden="true" />} label="สัปดาห์" />
             <ToolTab id="tab-month" controls="panel-month" active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} aria-hidden="true" />} label="เดือน" />
             <ToolTab id="tab-agenda" controls="panel-agenda" active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} aria-hidden="true" />} label="รายการ" />
@@ -405,6 +407,17 @@ export default function App() {
               setSelectedDate={setSelectedDate}
               role={role}
               roomFilter={roomFilter}
+              onBookRoom={openBooking}
+              onOpenDetail={openDetail}
+            />
+          </div>
+        )}
+        {view === 'overview' && (
+          <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
+            <OverviewView
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              role={role}
               onBookRoom={openBooking}
               onOpenDetail={openDetail}
             />
