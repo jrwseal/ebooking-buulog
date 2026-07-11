@@ -277,7 +277,7 @@ export default function App() {
               const modes: ViewMode[] = ['day', 'overview', 'week', 'month', 'agenda', 'mine']
               const i = modes.indexOf(view)
               if (e.key === 'ArrowRight') { e.preventDefault(); setView(modes[(i + 1) % modes.length]) }
-              else if (e.key === 'ArrowLeft') { e.preventDefault(); setView(modes[(i + 3) % modes.length]) }
+              else if (e.key === 'ArrowLeft') { e.preventDefault(); setView(modes[(i + modes.length - 1) % modes.length]) }
             }}
           >
             <ToolTab id="tab-day" controls="panel-day" active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} aria-hidden="true" />} label="วัน" />
