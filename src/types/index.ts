@@ -17,6 +17,13 @@ export interface Booking {
   start: string
   end: string
   purpose: string
+  studentId: string
+  major: string
+  year: string
+  phone: string
+  courseCode: string
+  courseGroup: string
+  instructorName: string
   status: Status
   reviewNote: string
   bookingCode: string

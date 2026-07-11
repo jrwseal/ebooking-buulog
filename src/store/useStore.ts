@@ -14,6 +14,13 @@ interface BookingRow {
   start_time: string
   end_time: string
   purpose: string
+  student_id: string
+  major: string
+  year_level: string
+  phone: string
+  course_code: string
+  course_group: string
+  instructor_name: string
   status: string
   review_note: string
   booking_code: string
@@ -43,6 +50,13 @@ function rowToBooking(row: BookingRow): Booking {
     start: row.start_time,
     end: row.end_time,
     purpose: row.purpose,
+    studentId: row.student_id ?? '',
+    major: row.major ?? '',
+    year: row.year_level ?? '',
+    phone: row.phone ?? '',
+    courseCode: row.course_code ?? '',
+    courseGroup: row.course_group ?? '',
+    instructorName: row.instructor_name ?? '',
     status: row.status as Status,
     reviewNote: row.review_note,
     bookingCode: row.booking_code ?? '',
@@ -61,6 +75,13 @@ function inputToRow(input: BookingInput) {
     start_time: input.start,
     end_time: input.end,
     purpose: input.purpose,
+    student_id: input.studentId,
+    major: input.major,
+    year_level: input.year,
+    phone: input.phone,
+    course_code: input.courseCode,
+    course_group: input.courseGroup,
+    instructor_name: input.instructorName,
     status: 'pending' as const,
     review_note: '',
     booking_code: generateCode(),

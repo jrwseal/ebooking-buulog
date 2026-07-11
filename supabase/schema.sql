@@ -22,6 +22,13 @@ create table if not exists bookings (
   start_time       time not null,
   end_time         time not null,
   purpose          text default '',
+  student_id       text default '',
+  major            text default '',
+  year_level       text default '',
+  phone            text default '',
+  course_code      text default '',
+  course_group     text default '',
+  instructor_name  text default '',
   status           text not null default 'pending',  -- pending | approved | rejected
   review_note      text default '',
   booking_code     text default '',
@@ -33,6 +40,13 @@ create table if not exists bookings (
 -- alter table bookings add column if not exists requester_email text default '';
 -- alter table bookings add column if not exists booking_code text default '';
 -- alter table bookings add column if not exists checked_in boolean default false;
+-- alter table bookings add column if not exists student_id text default '';
+-- alter table bookings add column if not exists major text default '';
+-- alter table bookings add column if not exists year_level text default '';
+-- alter table bookings add column if not exists phone text default '';
+-- alter table bookings add column if not exists course_code text default '';
+-- alter table bookings add column if not exists course_group text default '';
+-- alter table bookings add column if not exists instructor_name text default '';
 
 -- ── ตั้งค่า (รหัส admin) ───────────────────────────────────
 create table if not exists settings (
@@ -88,3 +102,8 @@ create policy "settings: update" on settings for update using (true);
 -- end_time    <-> end
 -- review_note <-> reviewNote
 -- created_at  <-> createdAt (unix ms)
+-- student_id      <-> studentId
+-- year_level      <-> year
+-- course_code     <-> courseCode
+-- course_group    <-> courseGroup
+-- instructor_name <-> instructorName
