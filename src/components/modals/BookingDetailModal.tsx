@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, CalendarDays, Clock, MapPin, Users, AlertTriangle, Check, Trash2, CalendarPlus, ExternalLink, ScanLine } from 'lucide-react'
+import { X, CalendarDays, Clock, MapPin, Users, AlertTriangle, Check, Trash2, CalendarPlus, ExternalLink, ScanLine, FileDown } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { STATUS, thaiFull, overlaps } from '../../utils/datetime'
 import { useStore } from '../../store/useStore'
@@ -49,12 +49,15 @@ function googleCalUrl(b: Booking, room: string, title: string): string {
   return `https://calendar.google.com/calendar/render?${p}`
 }
 
+import { downloadBookingPdf } from '../../lib/pdf/generateBookingPdf'
+
 interface BookingDetailModalProps {
   booking: Booking
   role: 'requester' | 'approver'
   onClose: () => void
   onDecide: (id: string, status: Status, note: string) => void
   onRemove: (id: string) => void
+  onError: (msg: string) => void
 }
 
 export default function BookingDetailModal({
@@ -63,10 +66,26 @@ export default function BookingDetailModal({
   onClose,
   onDecide,
   onRemove,
+  onError,
 }: BookingDetailModalProps) {
   const { rooms, bookings } = useStore()
   const [note, setNote] = useState(b.reviewNote || '')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  async function handleDownloadPdf() {
+    const room = rooms.find((r) => r.id === b.roomId)
+    if (!room) { onError('ไม่พบข้อมูลห้อง'); return }
+    setDownloadingPdf(true)
+    try {
+      await downloadBookingPdf(b, room)
+    } catch (err) {
+      console.error('[downloadBookingPdf]', err)
+      onError('สร้าง PDF ไม่สำเร็จ ลองอีกครั้ง')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
   const trapRef = useFocusTrap<HTMLDivElement>()
 
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? id
@@ -179,6 +198,17 @@ export default function BookingDetailModal({
                 </span>
               )}
             </div>
+          )}
+
+          {b.bookingCode && (
+            <button
+              onClick={() => void handleDownloadPdf()}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:border-buu-subtle hover:text-buu transition disabled:opacity-60 w-full justify-center"
+            >
+              <FileDown size={13} aria-hidden="true" />
+              {downloadingPdf ? 'กำลังสร้าง PDF…' : 'ดาวน์โหลด PDF (แบบฟอร์มขอใช้ห้อง)'}
+            </button>
           )}
 
           {b.status === 'approved' && !b.checkedIn && (

@@ -462,6 +462,7 @@ export default function App() {
             await handleRemove(id)
             setSelectedBooking(null)
           }}
+          onError={(msg) => flash(msg, 'error')}
         />
       )}
 
