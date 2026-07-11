@@ -453,6 +453,7 @@ export default function App() {
         <BookingDetailModal
           booking={selectedBooking}
           role={role}
+          isOwner={selectedBooking.email === myEmail}
           onClose={() => setSelectedBooking(null)}
           onDecide={async (id, status, note) => {
             await handleDecide(id, status, note)

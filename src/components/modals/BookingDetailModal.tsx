@@ -54,6 +54,7 @@ import { downloadBookingPdf } from '../../lib/pdf/generateBookingPdf'
 interface BookingDetailModalProps {
   booking: Booking
   role: 'requester' | 'approver'
+  isOwner: boolean
   onClose: () => void
   onDecide: (id: string, status: Status, note: string) => void
   onRemove: (id: string) => void
@@ -63,6 +64,7 @@ interface BookingDetailModalProps {
 export default function BookingDetailModal({
   booking: b,
   role,
+  isOwner,
   onClose,
   onDecide,
   onRemove,
@@ -200,7 +202,7 @@ export default function BookingDetailModal({
             </div>
           )}
 
-          {b.bookingCode && (
+          {b.bookingCode && (isOwner || role === 'approver') && (
             <button
               onClick={() => void handleDownloadPdf()}
               disabled={downloadingPdf}
