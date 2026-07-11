@@ -453,6 +453,7 @@ export default function App() {
         <BookingDetailModal
           booking={selectedBooking}
           role={role}
+          isOwner={selectedBooking.email === myEmail}
           onClose={() => setSelectedBooking(null)}
           onDecide={async (id, status, note) => {
             await handleDecide(id, status, note)
@@ -462,6 +463,7 @@ export default function App() {
             await handleRemove(id)
             setSelectedBooking(null)
           }}
+          onError={(msg) => flash(msg, 'error')}
         />
       )}
 

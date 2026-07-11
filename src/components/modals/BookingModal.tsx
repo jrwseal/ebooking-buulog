@@ -28,6 +28,13 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     start: defaultHour !== undefined ? `${pad(defaultHour)}:00` : '09:00',
     end: defaultHour !== undefined ? `${pad(Math.min(20, defaultHour + 1))}:00` : '12:00',
     purpose: '',
+    studentId: '',
+    major: '',
+    year: '',
+    phone: '',
+    courseCode: '',
+    courseGroup: '',
+    instructorName: '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [recur, setRecur] = useState(false)
@@ -74,6 +81,21 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     if (!adminMode && !/.+@.+\..+/.test(form.email.trim())) {
       onError('กรอก email ให้ถูกต้อง')
       return
+    }
+    if (!adminMode) {
+      const required: Array<[string, string]> = [
+        [form.studentId, 'รหัสนิสิต'],
+        [form.major, 'สาขาวิชา/แขนงวิชา'],
+        [form.year, 'ชั้นปีที่'],
+        [form.phone, 'เบอร์โทรศัพท์'],
+        [form.courseCode, 'รหัสวิชา'],
+        [form.courseGroup, 'กลุ่ม'],
+      ]
+      const missing = required.find(([value]) => !value.trim())
+      if (missing) {
+        onError(`กรอก${missing[1]}ให้ครบ`)
+        return
+      }
     }
     if (toMin(form.end) <= toMin(form.start)) {
       onError('เวลาสิ้นสุดต้องหลังเวลาเริ่ม')
@@ -215,6 +237,71 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
                 className="input"
               />
             </Field>
+          )}
+
+          {!adminMode && (
+            <>
+              <div className="grid grid-cols-2 gap-2.5">
+                <Field label="รหัสนิสิต *">
+                  <input
+                    value={form.studentId}
+                    onChange={(e) => update('studentId', e.target.value)}
+                    placeholder="เช่น 64010123"
+                    className="input"
+                  />
+                </Field>
+                <Field label="ชั้นปีที่ *">
+                  <input
+                    value={form.year}
+                    onChange={(e) => update('year', e.target.value)}
+                    placeholder="เช่น 3"
+                    className="input"
+                  />
+                </Field>
+              </div>
+              <Field label="สาขาวิชา/แขนงวิชา *">
+                <input
+                  value={form.major}
+                  onChange={(e) => update('major', e.target.value)}
+                  placeholder="เช่น การจัดการโลจิสติกส์และโซ่อุปทาน"
+                  className="input"
+                />
+              </Field>
+              <Field label="เบอร์โทรศัพท์ *">
+                <input
+                  value={form.phone}
+                  onChange={(e) => update('phone', e.target.value)}
+                  placeholder="เช่น 0812345678"
+                  className="input"
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-2.5">
+                <Field label="รหัสวิชา *">
+                  <input
+                    value={form.courseCode}
+                    onChange={(e) => update('courseCode', e.target.value)}
+                    placeholder="เช่น 88420159"
+                    className="input"
+                  />
+                </Field>
+                <Field label="กลุ่ม *">
+                  <input
+                    value={form.courseGroup}
+                    onChange={(e) => update('courseGroup', e.target.value)}
+                    placeholder="เช่น 1"
+                    className="input"
+                  />
+                </Field>
+              </div>
+              <Field label="อาจารย์ประจำวิชาผู้รับรอง (ถ้ามี)">
+                <input
+                  value={form.instructorName}
+                  onChange={(e) => update('instructorName', e.target.value)}
+                  placeholder="ชื่อ-นามสกุล อาจารย์ผู้รับรอง"
+                  className="input"
+                />
+              </Field>
+            </>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
