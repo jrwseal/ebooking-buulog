@@ -6,9 +6,12 @@ import type { Booking, Room } from '../../types'
 
 export async function downloadBookingPdf(booking: Booking, room: Room): Promise<void> {
   const d = parseDate(booking.date)
+  const requested = new Date(booking.createdAt)
+  const requestDate = `${requested.getDate()} ${TH_MONTHS[requested.getMonth()]} ${requested.getFullYear() + 543}`
 
   const el = buildBookingFormElement({
     refCode: booking.bookingCode,
+    requestDate,
     studentName: booking.requester,
     studentId: booking.studentId,
     major: booking.major,

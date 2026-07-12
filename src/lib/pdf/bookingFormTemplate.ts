@@ -1,5 +1,6 @@
 export interface BookingFormData {
   refCode: string
+  requestDate: string
   studentName: string
   studentId: string
   major: string
@@ -70,6 +71,7 @@ export function buildBookingFormElement(rawData: BookingFormData): HTMLDivElemen
     yearBE: toThaiDigits(rawData.yearBE),
     startTime: toThaiDigits(rawData.startTime),
     endTime: toThaiDigits(rawData.endTime),
+    requestDate: toThaiDigits(rawData.requestDate),
   }
 
   const page = document.createElement('div')
@@ -115,7 +117,7 @@ export function buildBookingFormElement(rawData: BookingFormData): HTMLDivElemen
   const dateRight = document.createElement('div')
   dateRight.style.cssText = 'display:flex;align-items:baseline;gap:4px;'
   dateRight.appendChild(textSpan('วันที่'))
-  dateRight.appendChild(blankSpan('', '160px'))
+  dateRight.appendChild(blankSpan(data.requestDate, '160px'))
   dateRow.appendChild(textSpan('ที่ อว ๘๑๑๒.๑/'))
   dateRow.appendChild(dateRight)
   page.appendChild(dateRow)
