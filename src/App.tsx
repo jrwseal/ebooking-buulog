@@ -53,7 +53,7 @@ export default function App() {
   const [showRoomManager, setShowRoomManager] = useState(false)
   const [showQrScanner, setShowQrScanner] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
-  const [myEmail] = useState(() => localStorage.getItem('ebooking_email') ?? '')
+  const [myEmail, setMyEmail] = useState(() => localStorage.getItem('ebooking_email') ?? '')
 
   useEffect(() => {
     void fetchRooms()
@@ -443,7 +443,10 @@ export default function App() {
           defaultHour={bookingDefaultHour}
           adminMode={bookingAdminMode}
           onClose={() => setShowBooking(false)}
-          onSuccess={(msg) => flash(msg)}
+          onSuccess={(msg) => {
+            flash(msg)
+            setMyEmail(localStorage.getItem('ebooking_email') ?? '')
+          }}
           onError={(msg) => flash(msg, 'error')}
         />
       )}
