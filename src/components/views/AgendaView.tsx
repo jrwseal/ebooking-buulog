@@ -16,12 +16,12 @@ export default function AgendaView({ role, onOpenDetail }: AgendaViewProps) {
 
   const grouped = useMemo(() => {
     const upcoming = bookings
-      .filter((b) => b.date >= todayStr)
+      .filter((b) => b.date >= todayStr && (!masked || b.status === 'approved'))
       .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start))
     const map: Record<string, Booking[]> = {}
     for (const b of upcoming) (map[b.date] ??= []).push(b)
     return Object.entries(map)
-  }, [bookings])
+  }, [bookings, masked])
 
   if (grouped.length === 0) {
     return (
