@@ -99,7 +99,7 @@ interface StoreState {
   fetchRooms(): Promise<void>
   fetchBookings(from?: string, to?: string): Promise<void>
   fetchPin(): Promise<void>
-  addBooking(input: BookingInput): Promise<void>
+  addBooking(input: BookingInput): Promise<Booking>
   addSchedule(input: BookingInput): Promise<void>
   addSchedules(inputs: BookingInput[]): Promise<void>
   updateStatus(id: string, status: Status, note?: string): Promise<void>
@@ -179,6 +179,7 @@ export const useStore = create<StoreState>((set) => ({
       if (error) throw error
       const booking = rowToBooking(data as BookingRow)
       set((state) => ({ bookings: [...state.bookings, booking] }))
+      return booking
     } catch (err) {
       console.error('[addBooking]', err)
       throw err

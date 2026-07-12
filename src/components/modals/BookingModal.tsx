@@ -5,6 +5,7 @@ import { todayStr, toMin, overlaps, pad, parseDate, fmtDate } from '../../utils/
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import SearchableSelect from '../SearchableSelect'
 import { LECTURERS } from '../../data/lecturers'
+import { downloadBookingPdf } from '../../lib/pdf/generateBookingPdf'
 import type { BookingInput } from '../../store/useStore'
 
 interface BookingModalProps {
@@ -158,10 +159,18 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     }
     setSubmitting(true)
     try {
-      await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim(), email: form.email.trim() })
+      const booking = await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim(), email: form.email.trim() })
       localStorage.setItem('ebooking_email', form.email.trim())
       onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
       onClose()
+      const room = rooms.find((r) => r.id === booking.roomId)
+      if (room) {
+        try {
+          await downloadBookingPdf(booking, room)
+        } catch (err) {
+          console.error('[downloadBookingPdf]', err)
+        }
+      }
     } catch {
       onError('บันทึกไม่สำเร็จ ลองอีกครั้ง')
     } finally {
