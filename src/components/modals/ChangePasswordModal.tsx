@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { X, KeyRound } from 'lucide-react'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 
-interface ChangePinModalProps {
+interface ChangePasswordModalProps {
   onClose: () => void
   onSubmit: (current: string, next: string) => void
 }
 
-export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProps) {
+export default function ChangePasswordModal({ onClose, onSubmit }: ChangePasswordModalProps) {
   const [cur, setCur] = useState('')
   const [next, setNext] = useState('')
   const trapRef = useFocusTrap<HTMLDivElement>()
@@ -21,13 +21,13 @@ export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProp
         ref={trapRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="change-pin-title"
+        aria-labelledby="change-password-title"
         className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
       >
         <div className="sticky top-0 bg-white flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <h3 id="change-pin-title" className="font-bold flex items-center gap-2">
+          <h3 id="change-password-title" className="font-bold flex items-center gap-2">
             <KeyRound size={16} className="text-buu" aria-hidden="true" /> เปลี่ยนรหัสผ่าน
           </h3>
           <button
@@ -68,7 +68,6 @@ export default function ChangePinModal({ onClose, onSubmit }: ChangePinModalProp
           >
             บันทึกรหัสใหม่
           </button>
-          <p className="text-xs text-slate-400">รหัสจะถูกบันทึกใน Supabase settings table</p>
         </div>
       </div>
     </div>
