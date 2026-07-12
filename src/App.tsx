@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   Plus, Lock, LogOut, KeyRound,
-  LayoutGrid, CalendarRange, CalendarDays, List, User,
-  CheckCircle2, Hourglass, MapPin, X,
+  LayoutGrid, CalendarRange, CalendarDays, List, User, Users,
+  CheckCircle2, Hourglass, MapPin,
   ClipboardCheck, Trash2, DoorOpen, ChevronDown, GraduationCap, ScanLine, Table2,
 } from 'lucide-react'
-import { useFocusTrap } from './hooks/useFocusTrap'
 import { useStore } from './store/useStore'
+import { hashPassword } from './lib/auth/hash'
 import MonthView from './components/views/MonthView'
 import WeekView from './components/views/WeekView'
 import DayView from './components/views/DayView'
@@ -16,7 +16,9 @@ import MyBookingsView from './components/views/MyBookingsView'
 import BookingModal from './components/modals/BookingModal'
 import BookingDetailModal from './components/modals/BookingDetailModal'
 import ApprovalQueue from './components/modals/ApprovalQueue'
-import ChangePinModal from './components/modals/ChangePinModal'
+import ChangePasswordModal from './components/modals/ChangePasswordModal'
+import LoginModal from './components/modals/LoginModal'
+import AccountManagerModal from './components/modals/AccountManagerModal'
 import RoomManagerModal from './components/modals/RoomManagerModal'
 import QrScannerModal from './components/modals/QrScannerModal'
 import { pad, fmtDate, todayStr } from './utils/datetime'
@@ -27,13 +29,16 @@ type ToastState = { msg: string; kind: 'ok' | 'error' }
 
 export default function App() {
   const {
-    rooms, bookings, loading,
-    fetchRooms, fetchBookings, fetchPin,
-    pin, updateStatus, removeBooking, changePin, clearBookings, notifyApproval,
+    rooms, bookings, approvers, loading,
+    fetchRooms, fetchBookings, fetchApprovers,
+    updateStatus, removeBooking, changeOwnPassword, clearBookings, notifyApproval,
   } = useStore()
 
   const [role, setRole] = useState<'requester' | 'approver'>('requester')
   const [authed, setAuthed] = useState(false)
+  const [currentApprover, setCurrentApprover] = useState<{ username: string; displayName: string; isAdmin: boolean } | null>(null)
+  const [sessionRestored, setSessionRestored] = useState(false)
+  const [showAccountManager, setShowAccountManager] = useState(false)
   const [view, setView] = useState<ViewMode>('month')
   const [cursor, setCursor] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(todayStr)
@@ -58,8 +63,28 @@ export default function App() {
   useEffect(() => {
     void fetchRooms()
     void fetchBookings()
-    void fetchPin()
-  }, [fetchRooms, fetchBookings, fetchPin])
+    void fetchApprovers()
+  }, [fetchRooms, fetchBookings, fetchApprovers])
+
+  useEffect(() => {
+    if (sessionRestored || approvers.length === 0) return
+    setSessionRestored(true)
+    const raw = localStorage.getItem('ebooking_approver_session')
+    if (!raw) return
+    try {
+      const saved = JSON.parse(raw) as { username: string }
+      const found = approvers.find((a) => a.username === saved.username)
+      if (found && found.active) {
+        setAuthed(true)
+        setRole('approver')
+        setCurrentApprover({ username: found.username, displayName: found.displayName, isAdmin: found.isAdmin })
+      } else {
+        localStorage.removeItem('ebooking_approver_session')
+      }
+    } catch {
+      localStorage.removeItem('ebooking_approver_session')
+    }
+  }, [approvers, sessionRestored])
 
   useEffect(() => {
     if (view === 'overview' && !(role === 'approver' && authed)) setView('month')
@@ -92,32 +117,37 @@ export default function App() {
     setRole(r)
   }
 
-  function tryLogin(input: string) {
-    if (input === pin) {
-      setAuthed(true)
-      setRole('approver')
-      setLoginOpen(false)
-      flash('เข้าสู่ระบบผู้อนุมัติแล้ว')
-    } else {
-      flash('รหัสผ่านไม่ถูกต้อง', 'error')
-    }
+  async function tryLogin(username: string, password: string) {
+    const found = approvers.find((a) => a.username.toLowerCase() === username.toLowerCase())
+    if (!found || !found.active) { flash('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error'); return }
+    const hash = await hashPassword(password, found.salt)
+    if (hash !== found.passwordHash) { flash('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error'); return }
+    setAuthed(true)
+    setRole('approver')
+    setCurrentApprover({ username: found.username, displayName: found.displayName, isAdmin: found.isAdmin })
+    localStorage.setItem('ebooking_approver_session', JSON.stringify({ username: found.username }))
+    setLoginOpen(false)
+    flash(`เข้าสู่ระบบผู้อนุมัติแล้ว (${found.displayName})`)
   }
 
   function logout() {
     setAuthed(false)
     setRole('requester')
+    setCurrentApprover(null)
+    localStorage.removeItem('ebooking_approver_session')
     flash('ออกจากระบบแล้ว')
   }
 
-  async function handleChangePin(current: string, next: string) {
-    if (current !== pin) { flash('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error'); return }
+  async function handleChangePassword(current: string, next: string) {
     if (next.length < 4) { flash('รหัสใหม่ต้องอย่างน้อย 4 หลัก', 'error'); return }
+    const me = approvers.find((a) => a.username === currentApprover?.username)
+    if (!me) { flash('ไม่พบบัญชีผู้ใช้', 'error'); return }
     try {
-      await changePin(next)
+      await changeOwnPassword(me.id, current, next)
       setPinModal(false)
       flash('เปลี่ยนรหัสผ่านแล้ว')
     } catch {
-      flash('บันทึกไม่สำเร็จ ลองอีกครั้ง', 'error')
+      flash('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error')
     }
   }
 
@@ -327,6 +357,14 @@ export default function App() {
               >
                 <DoorOpen size={16} aria-hidden="true" /> ห้อง
               </button>
+              {currentApprover?.isAdmin && (
+                <button
+                  onClick={() => setShowAccountManager(true)}
+                  className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-buu-subtle hover:text-buu transition"
+                >
+                  <Users size={16} aria-hidden="true" /> บัญชี
+                </button>
+              )}
               <button
                 onClick={() => setPinModal(true)}
                 className="flex items-center gap-1.5 text-sm px-3 py-2 min-h-[44px] sm:min-h-0 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-slate-600 transition"
@@ -501,19 +539,27 @@ export default function App() {
         />
       )}
 
-      {/* Change PIN modal */}
+      {/* Change password modal */}
       {pinModal && (
-        <ChangePinModal
+        <ChangePasswordModal
           onClose={() => setPinModal(false)}
-          onSubmit={(current, next) => void handleChangePin(current, next)}
+          onSubmit={(current, next) => void handleChangePassword(current, next)}
         />
       )}
 
-      {/* Admin login modal */}
+      {/* Approver login modal */}
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
           onSubmit={tryLogin}
+        />
+      )}
+
+      {/* Account manager modal (admin only) */}
+      {showAccountManager && currentApprover && (
+        <AccountManagerModal
+          onClose={() => setShowAccountManager(false)}
+          currentUsername={currentApprover.username}
         />
       )}
 
