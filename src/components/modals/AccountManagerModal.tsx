@@ -59,9 +59,9 @@ export default function AccountManagerModal({ onClose, currentUsername }: Accoun
     }
   }
 
-  async function handleRemove(id: string, username: string, isAdmin: boolean) {
+  async function handleRemove(id: string, username: string, isAdmin: boolean, active: boolean) {
     if (username === currentUsername) { setErr('ลบบัญชีตัวเองไม่ได้'); return }
-    if (isAdmin && activeAdminCount <= 1) { setErr('ต้องมีแอดมินที่ใช้งานได้อย่างน้อย 1 คน'); return }
+    if (active && isAdmin && activeAdminCount <= 1) { setErr('ต้องมีแอดมินที่ใช้งานได้อย่างน้อย 1 คน'); return }
     if (deleteConfirmId !== id) { setDeleteConfirmId(id); return }
     setDeleteConfirmId(null)
     setBusy(true)
@@ -130,8 +130,9 @@ export default function AccountManagerModal({ onClose, currentUsername }: Accoun
                 {deleteConfirmId === a.id ? (
                   <div className="flex items-center gap-2 shrink-0 text-xs">
                     <button
-                      onClick={() => void handleRemove(a.id, a.username, a.isAdmin)}
-                      className="font-medium text-rose-600 hover:underline"
+                      onClick={() => void handleRemove(a.id, a.username, a.isAdmin, a.active)}
+                      disabled={busy}
+                      className="font-medium text-rose-600 hover:underline disabled:opacity-50"
                     >
                       ลบ
                     </button>
@@ -141,7 +142,7 @@ export default function AccountManagerModal({ onClose, currentUsername }: Accoun
                   </div>
                 ) : (
                   <button
-                    onClick={() => void handleRemove(a.id, a.username, a.isAdmin)}
+                    onClick={() => void handleRemove(a.id, a.username, a.isAdmin, a.active)}
                     disabled={busy}
                     aria-label={`ลบ ${a.displayName}`}
                     className="w-9 h-9 flex items-center justify-center rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 focus:opacity-100 disabled:opacity-30"
