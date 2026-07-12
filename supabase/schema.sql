@@ -48,13 +48,39 @@ create table if not exists bookings (
 -- alter table bookings add column if not exists course_group text default '';
 -- alter table bookings add column if not exists instructor_name text default '';
 
--- ── ตั้งค่า (รหัส admin) ───────────────────────────────────
+-- ── ตั้งค่า (คงไว้เผื่อใช้ในอนาคต — ไม่ใช้เก็บรหัสผ่านแล้ว) ──
 create table if not exists settings (
   key   text primary key,
   value text
 );
-insert into settings (key, value) values ('approver_pin', '123456')
-  on conflict (key) do nothing;
+
+-- ── บัญชีผู้อนุมัติ ───────────────────────────────────────
+-- แทนที่ approver_pin เดิม — หลาย account, มี is_admin คุมสิทธิ์จัดการบัญชีอื่น
+create extension if not exists pgcrypto;
+
+create table if not exists approvers (
+  id            uuid primary key default gen_random_uuid(),
+  username      text not null unique,
+  password_hash text not null,
+  salt          text not null,
+  display_name  text not null,
+  is_admin      boolean not null default false,
+  active        boolean not null default true,
+  created_at    timestamptz default now()
+);
+
+-- admin เริ่มต้น — เปลี่ยนรหัสผ่านทันทีหลัง deploy ผ่านปุ่ม "รหัสผ่าน" ในแอป
+-- (username: admin, password: changeme123)
+insert into approvers (username, password_hash, salt, display_name, is_admin, active)
+values (
+  'admin',
+  encode(digest('seed-salt-0001' || 'changeme123', 'sha256'), 'hex'),
+  'seed-salt-0001',
+  'ผู้ดูแลระบบ',
+  true,
+  true
+)
+on conflict (username) do nothing;
 
 -- ── ข้อมูลห้องตั้งต้น ──────────────────────────────────────
 insert into rooms (id, name, type, capacity) values
@@ -88,11 +114,18 @@ create policy "bookings: insert pending" on bookings for insert
 
 -- ── settings ──────────────────────────────────────────────
 alter table settings enable row level security;
--- อ่านได้ทุกคน (ไว้ fetch PIN มาตรวจสอบ login)
 create policy "settings: read all" on settings for select using (true);
--- update PIN: ทุกคนทำได้ผ่าน anon key (จำเป็นสำหรับ "เปลี่ยนรหัสผ่าน" feature)
--- ความเสี่ยง: ใครก็ update PIN ได้หากรู้ API — ยอมรับได้สำหรับระบบภายใน
-create policy "settings: update" on settings for update using (true);
+
+-- ── approvers ─────────────────────────────────────────────
+alter table approvers enable row level security;
+-- อ่านได้ทุกคน (จำเป็นสำหรับตรวจสอบ login ฝั่ง client ด้วย anon key)
+create policy "approvers: read all" on approvers for select using (true);
+-- insert/update/delete ทำได้ผ่าน anon key เช่นเดียวกับ PIN เดิม
+-- ความเสี่ยง: ใครก็แก้ไขบัญชีได้หากรู้ API — ยอมรับได้สำหรับระบบภายใน
+-- (ความปลอดภัยสูงกว่านี้ต้องใช้ Supabase Auth ซึ่งไม่ได้เลือกใช้รอบนี้)
+create policy "approvers: insert" on approvers for insert with check (true);
+create policy "approvers: update" on approvers for update using (true);
+create policy "approvers: delete" on approvers for delete using (true);
 
 -- ============================================================
 -- Column mapping  (DB  <->  App)
@@ -107,3 +140,6 @@ create policy "settings: update" on settings for update using (true);
 -- course_code     <-> courseCode
 -- course_group    <-> courseGroup
 -- instructor_name <-> instructorName
+-- password_hash   <-> passwordHash
+-- display_name    <-> displayName
+-- is_admin        <-> isAdmin
