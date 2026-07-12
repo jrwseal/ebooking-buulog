@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
-import type { Booking, Room, Status } from '../types'
+import { randomSalt, hashPassword } from '../lib/auth/hash'
+import type { Approver, Booking, Room, Status } from '../types'
 
 // ---- DB row shape --------------------------------------------------------
 
@@ -26,6 +27,28 @@ interface BookingRow {
   booking_code: string
   checked_in: boolean
   created_at: string
+}
+
+interface ApproverRow {
+  id: string
+  username: string
+  password_hash: string
+  salt: string
+  display_name: string
+  is_admin: boolean
+  active: boolean
+}
+
+function rowToApprover(row: ApproverRow): Approver {
+  return {
+    id: row.id,
+    username: row.username,
+    passwordHash: row.password_hash,
+    salt: row.salt,
+    displayName: row.display_name,
+    isAdmin: row.is_admin,
+    active: row.active,
+  }
 }
 
 // ---- Public input type ---------------------------------------------------
@@ -93,12 +116,12 @@ function inputToRow(input: BookingInput) {
 interface StoreState {
   rooms: Room[]
   bookings: Booking[]
+  approvers: Approver[]
   loading: boolean
-  pin: string
 
   fetchRooms(): Promise<void>
   fetchBookings(from?: string, to?: string): Promise<void>
-  fetchPin(): Promise<void>
+  fetchApprovers(): Promise<void>
   addBooking(input: BookingInput): Promise<Booking>
   addSchedule(input: BookingInput): Promise<void>
   addSchedules(inputs: BookingInput[]): Promise<void>
@@ -108,15 +131,18 @@ interface StoreState {
   removeBooking(id: string): Promise<void>
   addRoom(room: Room): Promise<void>
   removeRoom(id: string): Promise<void>
-  changePin(next: string): Promise<void>
+  addApprover(username: string, displayName: string, password: string, isAdmin: boolean): Promise<void>
+  removeApprover(id: string): Promise<void>
+  setApproverActive(id: string, active: boolean): Promise<void>
+  changeOwnPassword(id: string, currentPassword: string, newPassword: string): Promise<void>
   clearBookings(): Promise<void>
 }
 
 export const useStore = create<StoreState>((set) => ({
   rooms: [],
   bookings: [],
+  approvers: [],
   loading: false,
-  pin: '123456',
 
   async fetchRooms() {
     set({ loading: true })
@@ -154,17 +180,16 @@ export const useStore = create<StoreState>((set) => ({
     }
   },
 
-  async fetchPin() {
+  async fetchApprovers() {
     try {
       const { data, error } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'approver_pin')
-        .single()
+        .from('approvers')
+        .select('*')
+        .order('username')
       if (error) throw error
-      if (data?.value) set({ pin: data.value as string })
+      set({ approvers: ((data ?? []) as ApproverRow[]).map(rowToApprover) })
     } catch (err) {
-      console.error('[fetchPin]', err)
+      console.error('[fetchApprovers]', err)
     }
   },
 
@@ -334,13 +359,81 @@ export const useStore = create<StoreState>((set) => ({
     }
   },
 
-  async changePin(next: string) {
-    const { error } = await supabase
-      .from('settings')
-      .update({ value: next })
-      .eq('key', 'approver_pin')
+  async addApprover(username: string, displayName: string, password: string, isAdmin: boolean) {
+    set({ loading: true })
+    try {
+      const salt = randomSalt()
+      const passwordHash = await hashPassword(password, salt)
+      const { data, error } = await supabase
+        .from('approvers')
+        .insert({
+          username,
+          display_name: displayName,
+          password_hash: passwordHash,
+          salt,
+          is_admin: isAdmin,
+          active: true,
+        })
+        .select()
+        .single()
+      if (error) throw error
+      set((state) => ({
+        approvers: [...state.approvers, rowToApprover(data as ApproverRow)].sort((a, b) => a.username.localeCompare(b.username)),
+      }))
+    } catch (err) {
+      console.error('[addApprover]', err)
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  async removeApprover(id: string) {
+    set({ loading: true })
+    try {
+      const { error } = await supabase.from('approvers').delete().eq('id', id)
+      if (error) throw error
+      set((state) => ({ approvers: state.approvers.filter((a) => a.id !== id) }))
+    } catch (err) {
+      console.error('[removeApprover]', err)
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  async setApproverActive(id: string, active: boolean) {
+    set({ loading: true })
+    try {
+      const { error } = await supabase.from('approvers').update({ active }).eq('id', id)
+      if (error) throw error
+      set((state) => ({
+        approvers: state.approvers.map((a) => (a.id === id ? { ...a, active } : a)),
+      }))
+    } catch (err) {
+      console.error('[setApproverActive]', err)
+      throw err
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  async changeOwnPassword(id: string, currentPassword: string, newPassword: string) {
+    const { data, error } = await supabase.from('approvers').select('*').eq('id', id).single()
     if (error) throw error
-    set({ pin: next })
+    const row = data as ApproverRow
+    const currentHash = await hashPassword(currentPassword, row.salt)
+    if (currentHash !== row.password_hash) throw new Error('current password mismatch')
+    const salt = randomSalt()
+    const passwordHash = await hashPassword(newPassword, salt)
+    const { error: updateError } = await supabase
+      .from('approvers')
+      .update({ password_hash: passwordHash, salt })
+      .eq('id', id)
+    if (updateError) throw updateError
+    set((state) => ({
+      approvers: state.approvers.map((a) => (a.id === id ? { ...a, passwordHash, salt } : a)),
+    }))
   },
 
   async clearBookings() {
