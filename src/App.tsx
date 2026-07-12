@@ -258,6 +258,12 @@ export default function App() {
             </button>
           </div>
 
+          {role === 'approver' && authed && currentApprover && (
+            <span className="hidden sm:inline text-buu-on-muted text-sm">
+              {currentApprover.displayName}
+            </span>
+          )}
+
           {role === 'approver' && authed && (
             <button
               onClick={logout}
