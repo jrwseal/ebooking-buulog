@@ -61,6 +61,10 @@ export default function App() {
     void fetchPin()
   }, [fetchRooms, fetchBookings, fetchPin])
 
+  useEffect(() => {
+    if (view === 'overview' && !(role === 'approver' && authed)) setView('month')
+  }, [role, authed, view])
+
   const flash = (msg: string, kind: 'ok' | 'error' = 'ok') => {
     setToast({ msg, kind })
     setTimeout(() => setToast(null), 2600)
@@ -274,14 +278,18 @@ export default function App() {
             aria-label="มุมมองตาราง"
             className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5"
             onKeyDown={(e) => {
-              const modes: ViewMode[] = ['day', 'overview', 'week', 'month', 'agenda', 'mine']
+              const modes: ViewMode[] = role === 'approver' && authed
+                ? ['overview', 'day', 'week', 'month', 'agenda', 'mine']
+                : ['day', 'week', 'month', 'agenda', 'mine']
               const i = modes.indexOf(view)
               if (e.key === 'ArrowRight') { e.preventDefault(); setView(modes[(i + 1) % modes.length]) }
               else if (e.key === 'ArrowLeft') { e.preventDefault(); setView(modes[(i + modes.length - 1) % modes.length]) }
             }}
           >
+            {role === 'approver' && authed && (
+              <ToolTab id="tab-overview" controls="panel-overview" active={view === 'overview'} onClick={() => setView('overview')} icon={<Table2 size={15} aria-hidden="true" />} label="ภาพรวม" />
+            )}
             <ToolTab id="tab-day" controls="panel-day" active={view === 'day'} onClick={() => setView('day')} icon={<CalendarDays size={15} aria-hidden="true" />} label="วัน" />
-            <ToolTab id="tab-overview" controls="panel-overview" active={view === 'overview'} onClick={() => setView('overview')} icon={<Table2 size={15} aria-hidden="true" />} label="ภาพรวม" />
             <ToolTab id="tab-week" controls="panel-week" active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} aria-hidden="true" />} label="สัปดาห์" />
             <ToolTab id="tab-month" controls="panel-month" active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} aria-hidden="true" />} label="เดือน" />
             <ToolTab id="tab-agenda" controls="panel-agenda" active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} aria-hidden="true" />} label="รายการ" />
