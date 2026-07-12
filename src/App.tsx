@@ -329,7 +329,7 @@ export default function App() {
             <ToolTab id="tab-week" controls="panel-week" active={view === 'week'} onClick={() => setView('week')} icon={<CalendarRange size={15} aria-hidden="true" />} label="สัปดาห์" />
             <ToolTab id="tab-month" controls="panel-month" active={view === 'month'} onClick={() => setView('month')} icon={<LayoutGrid size={15} aria-hidden="true" />} label="เดือน" />
             <ToolTab id="tab-agenda" controls="panel-agenda" active={view === 'agenda'} onClick={() => setView('agenda')} icon={<List size={15} aria-hidden="true" />} label="รายการ" />
-            <ToolTab id="tab-mine" controls="panel-mine" active={view === 'mine'} onClick={() => setView('mine')} icon={<User size={15} aria-hidden="true" />} label="ของฉัน" />
+            <ToolTab id="tab-mine" controls="panel-mine" active={view === 'mine'} onClick={() => setView('mine')} icon={<User size={15} aria-hidden="true" />} label="ติดตามสถานะการจอง" />
           </div>
 
           {role === 'approver' && authed && (
