@@ -99,13 +99,16 @@ insert into rooms (id, name, type, capacity) values
 -- ── rooms ─────────────────────────────────────────────────
 alter table rooms enable row level security;
 -- ทุกคนอ่านได้ ไม่มีใคร insert/update/delete ผ่าน anon key
+drop policy if exists "rooms: read all" on rooms;
 create policy "rooms: read all" on rooms for select using (true);
 
 -- ── bookings ──────────────────────────────────────────────
 alter table bookings enable row level security;
 -- ทุกคนอ่านได้
+drop policy if exists "bookings: read all" on bookings;
 create policy "bookings: read all" on bookings for select using (true);
 -- ทุกคน insert ได้เฉพาะ status = pending (ป้องกัน insert approved ตรง)
+drop policy if exists "bookings: insert pending" on bookings;
 create policy "bookings: insert pending" on bookings for insert
   with check (status = 'pending');
 -- update/delete: ต้องผ่าน service_role (ทำผ่าน Supabase dashboard หรือ Edge Function)
@@ -114,17 +117,22 @@ create policy "bookings: insert pending" on bookings for insert
 
 -- ── settings ──────────────────────────────────────────────
 alter table settings enable row level security;
+drop policy if exists "settings: read all" on settings;
 create policy "settings: read all" on settings for select using (true);
 
 -- ── approvers ─────────────────────────────────────────────
 alter table approvers enable row level security;
 -- อ่านได้ทุกคน (จำเป็นสำหรับตรวจสอบ login ฝั่ง client ด้วย anon key)
+drop policy if exists "approvers: read all" on approvers;
 create policy "approvers: read all" on approvers for select using (true);
 -- insert/update/delete ทำได้ผ่าน anon key เช่นเดียวกับ PIN เดิม
 -- ความเสี่ยง: ใครก็แก้ไขบัญชีได้หากรู้ API — ยอมรับได้สำหรับระบบภายใน
 -- (ความปลอดภัยสูงกว่านี้ต้องใช้ Supabase Auth ซึ่งไม่ได้เลือกใช้รอบนี้)
+drop policy if exists "approvers: insert" on approvers;
 create policy "approvers: insert" on approvers for insert with check (true);
+drop policy if exists "approvers: update" on approvers;
 create policy "approvers: update" on approvers for update using (true);
+drop policy if exists "approvers: delete" on approvers;
 create policy "approvers: delete" on approvers for delete using (true);
 
 -- ============================================================
