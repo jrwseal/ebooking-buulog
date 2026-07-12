@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { STATUS, TH_DAYS_FULL, fmtDate, thaiFull, todayStr, parseDate, toMin, pad } from '../../utils/datetime'
+import { STATUS, TH_DAYS_FULL, fmtDate, thaiFull, todayStr, parseDate, overlaps, toMin, pad } from '../../utils/datetime'
 import Legend from '../Legend'
 import type { Booking } from '../../types'
 
@@ -26,16 +26,6 @@ const PERIODS: Period[] = [
   { key: 'evening', label: 'เย็น', startH: 16, endH: 20 },
 ]
 
-// Buckets a booking into the period containing its start time; clamps
-// out-of-range starts (shouldn't happen given the 08:00-20:00 booking UI,
-// but keeps the grid exhaustive) to the first/last period.
-function periodForStart(startMin: number): Period {
-  for (const p of PERIODS) {
-    if (startMin < p.endH * 60) return p
-  }
-  return PERIODS[PERIODS.length - 1]
-}
-
 export default function OverviewView({
   selectedDate,
   setSelectedDate,
@@ -59,7 +49,7 @@ export default function OverviewView({
                 b.roomId === room.id &&
                 b.date === selectedDate &&
                 b.status !== 'rejected' &&
-                periodForStart(toMin(b.start)).key === period.key,
+                overlaps(b.start, b.end, `${pad(period.startH)}:00`, `${pad(period.endH)}:00`),
             )
             .sort((a, b) => toMin(a.start) - toMin(b.start)),
         })),
