@@ -30,3 +30,13 @@ export interface Booking {
   checkedIn: boolean
   createdAt: number
 }
+
+export interface Approver {
+  id: string
+  username: string
+  passwordHash: string
+  salt: string
+  displayName: string
+  isAdmin: boolean
+  active: boolean
+}
