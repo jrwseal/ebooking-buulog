@@ -438,7 +438,7 @@ export default function App() {
         )}
         {view === 'mine' && (
           <div id="panel-mine" role="tabpanel" aria-labelledby="tab-mine">
-            <MyBookingsView myEmail={myEmail} onOpenDetail={openDetail} />
+            <MyBookingsView onOpenDetail={openDetail} />
           </div>
         )}
       </main>

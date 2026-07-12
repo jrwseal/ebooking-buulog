@@ -5,28 +5,25 @@ import { STATUS, thaiFull, todayStr } from '../../utils/datetime'
 import type { Booking } from '../../types'
 
 interface MyBookingsViewProps {
-  myEmail: string
   onOpenDetail: (b: Booking) => void
 }
 
-export default function MyBookingsView({ myEmail: defaultEmail, onOpenDetail }: MyBookingsViewProps) {
+export default function MyBookingsView({ onOpenDetail }: MyBookingsViewProps) {
   const { rooms, bookings } = useStore()
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? id
 
-  const [input, setInput] = useState(defaultEmail)
-  const [query, setQuery] = useState(defaultEmail)
+  const [input, setInput] = useState('')
+  const [query, setQuery] = useState('')
 
   function search() {
-    const v = input.trim()
-    setQuery(v)
-    if (v) localStorage.setItem('ebooking_email', v)
+    setQuery(input.trim())
   }
 
   const mine = useMemo(
     () =>
       query
         ? bookings
-            .filter((b) => b.email.toLowerCase() === query.toLowerCase())
+            .filter((b) => b.bookingCode.toLowerCase() === query.toLowerCase())
             .sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start))
         : [],
     [bookings, query],
@@ -39,11 +36,11 @@ export default function MyBookingsView({ myEmail: defaultEmail, onOpenDetail }: 
     <div className="space-y-4">
       <div className="flex gap-2">
         <input
-          type="email"
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && search()}
-          placeholder="อีเมลที่ใช้ตอนจอง"
+          placeholder="เลขที่อ้างอิงการจอง (Ref No.)"
           className="input flex-1"
         />
         <button
@@ -57,7 +54,7 @@ export default function MyBookingsView({ myEmail: defaultEmail, onOpenDetail }: 
       {!query && (
         <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
           <Search size={30} className="mx-auto mb-2 opacity-40" />
-          <p className="text-xs">ใส่อีเมลที่ใช้ตอนจองห้องแล้วกด ค้นหา</p>
+          <p className="text-xs">ใส่เลขที่อ้างอิงการจอง (Ref No.) แล้วกด ค้นหา</p>
         </div>
       )}
 
@@ -70,7 +67,7 @@ export default function MyBookingsView({ myEmail: defaultEmail, onOpenDetail }: 
 
       {mine.length > 0 && (
         <>
-        <p className="text-xs text-slate-400">แสดงการจองของ <span className="font-medium text-slate-600">{query}</span></p>
+        <p className="text-xs text-slate-400">ผลการค้นหาเลขที่อ้างอิง <span className="font-medium text-slate-600 font-mono">{query}</span></p>
 
       {upcoming.length > 0 && (
         <Section title="ที่กำลังจะมาถึง / รออนุมัติ">
