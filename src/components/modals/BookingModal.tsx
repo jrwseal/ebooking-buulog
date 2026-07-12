@@ -3,6 +3,8 @@ import { X, AlertTriangle, Info, Repeat2 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { todayStr, toMin, overlaps, pad, parseDate, fmtDate } from '../../utils/datetime'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import SearchableSelect from '../SearchableSelect'
+import { LECTURERS } from '../../data/lecturers'
 import type { BookingInput } from '../../store/useStore'
 
 interface BookingModalProps {
@@ -294,11 +296,11 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
                 </Field>
               </div>
               <Field label="อาจารย์ประจำวิชาผู้รับรอง (ถ้ามี)">
-                <input
+                <SearchableSelect
                   value={form.instructorName}
-                  onChange={(e) => update('instructorName', e.target.value)}
-                  placeholder="ชื่อ-นามสกุล อาจารย์ผู้รับรอง"
-                  className="input"
+                  onChange={(v) => update('instructorName', v)}
+                  options={LECTURERS}
+                  placeholder="ค้นหาชื่อ-นามสกุล อาจารย์ผู้รับรอง"
                 />
               </Field>
             </>
