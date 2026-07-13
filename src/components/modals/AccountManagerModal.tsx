@@ -11,12 +11,16 @@ interface AccountManagerModalProps {
 const EMPTY = { username: '', displayName: '', password: '', isAdmin: false }
 
 export default function AccountManagerModal({ onClose, currentUsername }: AccountManagerModalProps) {
-  const { approvers, addApprover, removeApprover, setApproverActive } = useStore()
+  const { approvers, addApprover, removeApprover, setApproverActive, notifyGmailAddress, saveEmailSettings } = useStore()
   const trapRef = useFocusTrap<HTMLDivElement>()
   const [form, setForm] = useState(EMPTY)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [gmailAddress, setGmailAddress] = useState(notifyGmailAddress)
+  const [appPassword, setAppPassword] = useState('')
+  const [emailSaved, setEmailSaved] = useState(false)
+  const [emailBusy, setEmailBusy] = useState(false)
 
   const activeAdminCount = approvers.filter((a) => a.isAdmin && a.active).length
 
@@ -71,6 +75,20 @@ export default function AccountManagerModal({ onClose, currentUsername }: Accoun
       setErr('ลบไม่สำเร็จ ลองอีกครั้ง')
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function handleSaveEmailSettings() {
+    setEmailBusy(true)
+    setEmailSaved(false)
+    try {
+      await saveEmailSettings(gmailAddress.trim(), appPassword.trim())
+      setAppPassword('')
+      setEmailSaved(true)
+    } catch {
+      setErr('บันทึกการตั้งค่าอีเมลไม่สำเร็จ ลองอีกครั้ง')
+    } finally {
+      setEmailBusy(false)
     }
   }
 
@@ -217,6 +235,39 @@ export default function AccountManagerModal({ onClose, currentUsername }: Accoun
               className="flex items-center gap-1.5 w-full justify-center py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-50 transition"
             >
               <Plus size={16} aria-hidden="true" /> เพิ่มบัญชี
+            </button>
+          </div>
+
+          <div className="border-t border-slate-100 pt-4 space-y-3">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">การแจ้งเตือนอีเมล</p>
+            <label className="block">
+              <span className="block text-xs font-medium text-slate-500 mb-1">ที่อยู่ Gmail ผู้ส่ง</span>
+              <input
+                className="input"
+                placeholder="เช่น jirawat.na@go.buu.ac.th"
+                value={gmailAddress}
+                onChange={(e) => { setGmailAddress(e.target.value); setEmailSaved(false) }}
+              />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-medium text-slate-500 mb-1">App Password</span>
+              <input
+                className="input"
+                type="password"
+                placeholder="กรอกใหม่เฉพาะตอนต้องการเปลี่ยน — ไม่แสดงรหัสเดิม"
+                value={appPassword}
+                onChange={(e) => { setAppPassword(e.target.value); setEmailSaved(false) }}
+              />
+            </label>
+            {emailSaved && (
+              <p className="text-sm text-emerald-600">บันทึกการตั้งค่าอีเมลแล้ว</p>
+            )}
+            <button
+              onClick={() => void handleSaveEmailSettings()}
+              disabled={emailBusy || !gmailAddress.trim()}
+              className="flex items-center gap-1.5 w-full justify-center py-2.5 rounded-lg bg-buu text-white font-semibold hover:bg-buu-dark disabled:opacity-50 transition"
+            >
+              บันทึกการตั้งค่าอีเมล
             </button>
           </div>
         </div>
