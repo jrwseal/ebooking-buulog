@@ -126,7 +126,10 @@ interface StoreState {
   addSchedule(input: BookingInput): Promise<void>
   addSchedules(inputs: BookingInput[]): Promise<void>
   updateStatus(id: string, status: Status, note?: string): Promise<void>
-  notifyApproval(id: string): Promise<void>
+  notifyStatusChange(id: string, event: 'submitted' | 'approved' | 'rejected'): Promise<void>
+  notifyGmailAddress: string
+  fetchEmailSettings(): Promise<void>
+  saveEmailSettings(gmailAddress: string, appPassword: string): Promise<void>
   checkIn(id: string): Promise<void>
   removeBooking(id: string): Promise<void>
   addRoom(room: Room): Promise<void>
@@ -143,6 +146,7 @@ export const useStore = create<StoreState>((set) => ({
   bookings: [],
   approvers: [],
   loading: false,
+  notifyGmailAddress: '',
 
   async fetchRooms() {
     set({ loading: true })
@@ -286,11 +290,41 @@ export const useStore = create<StoreState>((set) => ({
     }
   },
 
-  async notifyApproval(id: string) {
+  async notifyStatusChange(id: string, event: 'submitted' | 'approved' | 'rejected') {
     try {
-      await supabase.functions.invoke('send-approval-email', { body: { bookingId: id } })
+      await supabase.functions.invoke('send-booking-email', { body: { bookingId: id, event } })
     } catch (err) {
-      console.warn('[notifyApproval] email send failed:', err)
+      console.warn('[notifyStatusChange] email send failed:', err)
+    }
+  },
+
+  async fetchEmailSettings() {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'notify_gmail_address')
+        .maybeSingle()
+      if (error) throw error
+      set({ notifyGmailAddress: data?.value ?? '' })
+    } catch (err) {
+      console.error('[fetchEmailSettings]', err)
+    }
+  },
+
+  async saveEmailSettings(gmailAddress: string, appPassword: string) {
+    const { error: settingsError } = await supabase
+      .from('settings')
+      .upsert({ key: 'notify_gmail_address', value: gmailAddress })
+    if (settingsError) throw settingsError
+    set({ notifyGmailAddress: gmailAddress })
+
+    if (appPassword) {
+      const { error: configError } = await supabase
+        .from('email_config')
+        .update({ gmail_app_password: appPassword, updated_at: new Date().toISOString() })
+        .eq('id', 1)
+      if (configError) throw configError
     }
   },
 
