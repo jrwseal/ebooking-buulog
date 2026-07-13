@@ -84,6 +84,14 @@ await window.supabase.from('email_config').select('*')
 
 Expected: `data: []` or a permission error — never the actual `gmail_app_password` value. (If `window.supabase` isn't exposed globally, instead open Supabase Studio → SQL Editor → "Impersonate" the `anon` role, or use the REST API directly: `curl "$SUPABASE_URL/rest/v1/email_config?select=*" -H "apikey: $ANON_KEY"` and confirm the response is empty/forbidden.)
 
+Also verify the `UPDATE ... RETURNING` exfiltration path is blocked (PostgREST implicitly does a `select` after an update unless told not to):
+
+```js
+await window.supabase.from('email_config').update({ gmail_app_password: 'probe' }).eq('id', 1).select('gmail_app_password')
+```
+
+Expected: no `gmail_app_password` value returned in the response (empty `data` or an error) — the write may succeed, but the value must never come back in the response body.
+
 - [ ] **Step 4: Verify settings row is readable**
 
 ```js

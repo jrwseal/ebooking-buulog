@@ -151,3 +151,29 @@ create policy "approvers: delete" on approvers for delete using (true);
 -- password_hash   <-> passwordHash
 -- display_name    <-> displayName
 -- is_admin        <-> isAdmin
+
+-- ============================================================
+-- Email notifications — Gmail SMTP config
+-- ============================================================
+
+-- ── การตั้งค่าอีเมลผู้ส่ง (Gmail App Password) ──────────────
+-- เก็บแยกจาก settings เพราะต้องปิด select ทั้งหมด (anon key อ่านกลับไม่ได้)
+create table if not exists email_config (
+  id                 int primary key default 1,
+  gmail_app_password text default '',
+  updated_at         timestamptz default now(),
+  constraint singleton check (id = 1)
+);
+alter table email_config enable row level security;
+-- ไม่มี select policy เลย — anon key อ่านค่านี้กลับไม่ได้เด็ดขาด
+-- service role (edge function) bypass RLS อ่านได้ปกติ
+drop policy if exists "email_config: insert" on email_config;
+create policy "email_config: insert" on email_config for insert with check (true);
+drop policy if exists "email_config: update" on email_config;
+create policy "email_config: update" on email_config for update using (true);
+insert into email_config (id, gmail_app_password) values (1, '')
+on conflict (id) do nothing;
+
+-- ── ที่อยู่ Gmail ผู้ส่ง (ไม่ลับ — เก็บใน settings ที่มีอยู่แล้ว) ──
+insert into settings (key, value) values ('notify_gmail_address', 'jirawat.na@go.buu.ac.th')
+on conflict (key) do update set value = excluded.value;

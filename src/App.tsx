@@ -30,8 +30,8 @@ type ToastState = { msg: string; kind: 'ok' | 'error' }
 export default function App() {
   const {
     rooms, bookings, approvers, loading,
-    fetchRooms, fetchBookings, fetchApprovers,
-    updateStatus, removeBooking, changeOwnPassword, clearBookings, notifyApproval,
+    fetchRooms, fetchBookings, fetchApprovers, fetchEmailSettings,
+    updateStatus, removeBooking, changeOwnPassword, clearBookings, notifyStatusChange,
   } = useStore()
 
   const [role, setRole] = useState<'requester' | 'approver'>('requester')
@@ -64,7 +64,8 @@ export default function App() {
     void fetchRooms()
     void fetchBookings()
     void fetchApprovers()
-  }, [fetchRooms, fetchBookings, fetchApprovers])
+    void fetchEmailSettings()
+  }, [fetchRooms, fetchBookings, fetchApprovers, fetchEmailSettings])
 
   useEffect(() => {
     if (sessionRestored || approvers.length === 0) return
@@ -155,7 +156,7 @@ export default function App() {
     try {
       await updateStatus(id, status, note)
       flash(status === 'approved' ? 'อนุมัติคำขอแล้ว' : 'ปฏิเสธคำขอแล้ว')
-      if (status === 'approved') void notifyApproval(id)
+      if (status === 'approved' || status === 'rejected') void notifyStatusChange(id, status)
     } catch {
       flash('บันทึกไม่สำเร็จ ลองอีกครั้ง', 'error')
     }
