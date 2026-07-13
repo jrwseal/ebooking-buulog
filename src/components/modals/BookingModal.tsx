@@ -19,7 +19,7 @@ interface BookingModalProps {
 }
 
 export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, adminMode = false, onClose, onSuccess, onError }: BookingModalProps) {
-  const { rooms, bookings, addBooking, addSchedule, addSchedules } = useStore()
+  const { rooms, bookings, addBooking, addSchedule, addSchedules, notifyStatusChange } = useStore()
   const trapRef = useFocusTrap<HTMLDivElement>()
 
   const [form, setForm] = useState<BookingInput>({
@@ -161,6 +161,7 @@ export default function BookingModal({ defaultDate, defaultRoomId, defaultHour, 
     try {
       const booking = await addBooking({ ...form, title: form.title.trim(), requester: form.requester.trim(), email: form.email.trim() })
       localStorage.setItem('ebooking_email', form.email.trim())
+      void notifyStatusChange(booking.id, 'submitted')
       onSuccess('ส่งคำขอจองแล้ว รอการอนุมัติ')
       onClose()
       const room = rooms.find((r) => r.id === booking.roomId)
