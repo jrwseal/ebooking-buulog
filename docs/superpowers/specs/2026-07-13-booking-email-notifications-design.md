@@ -60,7 +60,7 @@ on conflict (key) do update set value = excluded.value;
   - **submitted**: หัวข้อ "ได้รับคำขอจองแล้ว — รอการอนุมัติ", แสดง `booking_code` + รายละเอียดการจอง, ข้อความแจ้งว่าจะอีเมลแจ้งผลอีกครั้งเมื่ออนุมัติ/ปฏิเสธ
   - **approved**: เนื้อหาเดิมจาก `send-approval-email` (คงข้อความเดิมทั้งหมด)
   - **rejected**: หัวข้อ "คำขอจองถูกปฏิเสธ", แสดง `review_note` เป็นเหตุผล
-- ส่งผ่าน `npm:denomailer` → `smtp.gmail.com:587`, STARTTLS, auth = `{ username: notify_gmail_address, password: gmail_app_password }`
+- ส่งผ่าน `npm:denomailer` → `smtp.gmail.com:465`, implicit TLS, auth = `{ username: notify_gmail_address, password: gmail_app_password }`
 - Error จากการส่ง (SMTP auth ผิด, network) → log แล้ว return 500 เหมือนเดิม แต่ฝั่ง client ไม่ throw ต่อ (ดูหัวข้อ client wiring)
 
 ## Client wiring
