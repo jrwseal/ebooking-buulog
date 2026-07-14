@@ -123,9 +123,14 @@ function buildAdminNotifyEmail(b: BookingWithRoom): { subject: string; html: str
   }
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+    return new Response(null, { headers: CORS_HEADERS })
   }
 
   try {
@@ -142,7 +147,7 @@ Deno.serve(async (req) => {
       .eq('id', bookingId)
       .single()
 
-    if (error || !booking) return new Response('booking not found', { status: 404 })
+    if (error || !booking) return new Response('booking not found', { status: 404, headers: CORS_HEADERS })
 
     const { data: configRow } = await supabase
       .from('email_config')
@@ -150,7 +155,7 @@ Deno.serve(async (req) => {
       .eq('id', 1)
       .single()
     const appPassword = configRow?.gmail_app_password ?? ''
-    if (!appPassword) return new Response('not configured', { status: 200 })
+    if (!appPassword) return new Response('not configured', { status: 200, headers: CORS_HEADERS })
 
     const { data: settingRow } = await supabase
       .from('settings')
@@ -158,7 +163,7 @@ Deno.serve(async (req) => {
       .eq('key', 'notify_gmail_address')
       .single()
     const gmailAddress = settingRow?.value ?? ''
-    if (!gmailAddress) return new Response('not configured', { status: 200 })
+    if (!gmailAddress) return new Response('not configured', { status: 200, headers: CORS_HEADERS })
 
     const b = booking as BookingWithRoom
 
@@ -173,7 +178,7 @@ Deno.serve(async (req) => {
       messages.push({ to: b.requester_email, ...requesterEmail })
     }
 
-    if (messages.length === 0) return new Response('no email', { status: 200 })
+    if (messages.length === 0) return new Response('no email', { status: 200, headers: CORS_HEADERS })
 
     const client = new SMTPClient({
       connection: {
@@ -195,9 +200,9 @@ Deno.serve(async (req) => {
     }
     await client.close()
 
-    return new Response('sent', { status: 200 })
+    return new Response('sent', { status: 200, headers: CORS_HEADERS })
   } catch (err) {
     console.error('[send-booking-email]', err)
-    return new Response('error', { status: 500 })
+    return new Response('error', { status: 500, headers: CORS_HEADERS })
   }
 })
