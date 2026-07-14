@@ -104,6 +104,25 @@ function buildEmail(event: EmailEvent, b: BookingWithRoom): { subject: string; h
   }
 }
 
+function buildAdminNotifyEmail(b: BookingWithRoom): { subject: string; html: string } {
+  const roomName = b.rooms?.name ?? b.room_id
+  return {
+    subject: `[${b.booking_code}] มีคำขอจองใหม่รอการอนุมัติ — ห้อง ${roomName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="background:#1e3a5f;padding:16px 24px;border-radius:8px 8px 0 0">
+          <h1 style="color:#fff;font-size:16px;margin:0">ระบบจองห้องเรียน | คณะโลจิสติกส์ ม.บูรพา</h1>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-top:none;padding:24px;border-radius:0 0 8px 8px">
+          <h2 style="color:#1e3a5f;font-size:18px;margin:0 0 16px">มีคำขอจองใหม่รอการอนุมัติ</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">${detailRows(b)}</table>
+          <p style="font-size:12px;color:#94a3b8;margin-top:24px">เข้าสู่ระบบเพื่อพิจารณาอนุมัติ/ปฏิเสธคำขอนี้</p>
+        </div>
+      </div>
+    `,
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type' } })
@@ -124,7 +143,6 @@ Deno.serve(async (req) => {
       .single()
 
     if (error || !booking) return new Response('booking not found', { status: 404 })
-    if (!booking.requester_email) return new Response('no email', { status: 200 })
 
     const { data: configRow } = await supabase
       .from('email_config')
@@ -142,7 +160,20 @@ Deno.serve(async (req) => {
     const gmailAddress = settingRow?.value ?? ''
     if (!gmailAddress) return new Response('not configured', { status: 200 })
 
-    const { subject, html } = buildEmail(event, booking as BookingWithRoom)
+    const b = booking as BookingWithRoom
+
+    // ผู้ดูแลระบบใช้บัญชี Gmail เดียวกับที่ส่ง จึงแจ้งเตือนตัวเองเมื่อมีคำขอใหม่
+    const messages: { to: string; subject: string; html: string }[] = []
+    if (event === 'submitted') {
+      const adminEmail = buildAdminNotifyEmail(b)
+      messages.push({ to: gmailAddress, ...adminEmail })
+    }
+    if (b.requester_email) {
+      const requesterEmail = buildEmail(event, b)
+      messages.push({ to: b.requester_email, ...requesterEmail })
+    }
+
+    if (messages.length === 0) return new Response('no email', { status: 200 })
 
     const client = new SMTPClient({
       connection: {
@@ -153,13 +184,15 @@ Deno.serve(async (req) => {
       },
     })
 
-    await client.send({
-      from: gmailAddress,
-      to: booking.requester_email,
-      subject,
-      content: 'auto',
-      html,
-    })
+    for (const msg of messages) {
+      await client.send({
+        from: gmailAddress,
+        to: msg.to,
+        subject: msg.subject,
+        content: 'auto',
+        html: msg.html,
+      })
+    }
     await client.close()
 
     return new Response('sent', { status: 200 })
