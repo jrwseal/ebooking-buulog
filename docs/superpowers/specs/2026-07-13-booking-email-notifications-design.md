@@ -53,14 +53,17 @@ on conflict (key) do update set value = excluded.value;
 แทนที่ `supabase/functions/send-approval-email/` ด้วย `supabase/functions/send-booking-email/`
 
 - Input: `{ bookingId: string, event: 'submitted' | 'approved' | 'rejected' }`
-- ดึง booking (+ room name) เหมือนเดิม, ถ้าไม่มี `requester_email` → return 200 คืนทันที (ไม่ใช่ error)
+- ดึง booking (+ room name) เหมือนเดิม
 - ดึง `gmail_app_password` จาก `email_config` (service role client, RLS bypass) และ `notify_gmail_address` จาก `settings`
-- ถ้า `gmail_app_password` ว่าง → return 200 "not configured" (ไม่ throw — ระบบจองต้องไม่พัง)
-- เนื้อหาอีเมลแยกตาม `event`:
-  - **submitted**: หัวข้อ "ได้รับคำขอจองแล้ว — รอการอนุมัติ", แสดง `booking_code` + รายละเอียดการจอง, ข้อความแจ้งว่าจะอีเมลแจ้งผลอีกครั้งเมื่ออนุมัติ/ปฏิเสธ
-  - **approved**: เนื้อหาเดิมจาก `send-approval-email` (คงข้อความเดิมทั้งหมด)
-  - **rejected**: หัวข้อ "คำขอจองถูกปฏิเสธ", แสดง `review_note` เป็นเหตุผล
-- ส่งผ่าน `npm:denomailer` → `smtp.gmail.com:465`, implicit TLS, auth = `{ username: notify_gmail_address, password: gmail_app_password }`
+- ถ้า `gmail_app_password` หรือ `notify_gmail_address` ว่าง → return 200 "not configured" (ไม่ throw — ระบบจองต้องไม่พัง)
+- ประกอบรายการอีเมลที่จะส่งตามเงื่อนไข (ไม่ใช่ 1 ฉบับตายตัวอีกต่อไป):
+  - **event = submitted**: เพิ่มอีเมลแจ้งเตือนผู้ดูแลระบบเสมอ (ส่งไปที่ `notify_gmail_address` เอง — ใช้บัญชีเดียวกับที่ส่ง จึงไม่ต้องมี field ผู้รับแยก) หัวข้อ "มีคำขอจองใหม่รอการอนุมัติ"
+  - ถ้ามี `requester_email` (ไม่ว่า event ไหน) → เพิ่มอีเมลถึงผู้จองด้วย เนื้อหาแยกตาม `event`:
+    - **submitted**: หัวข้อ "ได้รับคำขอจองแล้ว — รอการอนุมัติ", แสดง `booking_code` + รายละเอียดการจอง, ข้อความแจ้งว่าจะอีเมลแจ้งผลอีกครั้งเมื่ออนุมัติ/ปฏิเสธ
+    - **approved**: เนื้อหาเดิมจาก `send-approval-email` (คงข้อความเดิมทั้งหมด)
+    - **rejected**: หัวข้อ "คำขอจองถูกปฏิเสธ", แสดง `review_note` เป็นเหตุผล
+  - ถ้าไม่มีอีเมลใดต้องส่งเลย (event ≠ submitted และไม่มี `requester_email`) → return 200 "no email"
+- ส่งผ่าน `denomailer` (`https://deno.land/x/denomailer@1.6.0/mod.ts` — แพ็กเกจนี้ไม่มีบน npm) → `smtp.gmail.com:465`, implicit TLS, auth = `{ username: notify_gmail_address, password: gmail_app_password }`, เปิด SMTP connection ครั้งเดียวแล้ววนส่งทุกฉบับในรายการ (ส่งฝั่งแอดมินก่อนเสมอ เพื่อให้แจ้งเตือนแอดมินสำเร็จแม้อีเมลผู้จองจะผิดพลาด)
 - Error จากการส่ง (SMTP auth ผิด, network) → log แล้ว return 500 เหมือนเดิม แต่ฝั่ง client ไม่ throw ต่อ (ดูหัวข้อ client wiring)
 
 ## Client wiring
