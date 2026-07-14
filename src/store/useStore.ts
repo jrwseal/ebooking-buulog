@@ -320,10 +320,7 @@ export const useStore = create<StoreState>((set) => ({
     set({ notifyGmailAddress: gmailAddress })
 
     if (appPassword) {
-      const { error: configError } = await supabase
-        .from('email_config')
-        .update({ gmail_app_password: appPassword, updated_at: new Date().toISOString() })
-        .eq('id', 1)
+      const { error: configError } = await supabase.rpc('set_email_app_password', { new_password: appPassword })
       if (configError) throw configError
     }
   },

@@ -171,14 +171,30 @@ create table if not exists email_config (
   constraint singleton check (id = 1)
 );
 alter table email_config enable row level security;
--- ไม่มี select policy เลย — anon key อ่านค่านี้กลับไม่ได้เด็ดขาด
--- service role (edge function) bypass RLS อ่านได้ปกติ
+-- ลบ policy เก่า (insert/update ตรงตาราง ใช้ไม่ได้จริงเพราะ update มองไม่เห็นแถวถ้าไม่มี select policy)
 drop policy if exists "email_config: insert" on email_config;
-create policy "email_config: insert" on email_config for insert with check (true);
 drop policy if exists "email_config: update" on email_config;
-create policy "email_config: update" on email_config for update using (true);
+-- ไม่มี policy ใดๆ เลยบนตารางนี้โดยตรง — anon key แตะตารางนี้ไม่ได้เลยทั้ง select/insert/update
+-- (Postgres RLS: UPDATE ต้องมองเห็นแถวก่อนถึงจะแก้ได้ ถ้าไม่มี select policy คู่กัน
+--  แม้ update policy จะเป็น using(true) ก็ยังแก้ไม่ได้ — จึงใช้ SECURITY DEFINER function แทนด้านล่าง)
+-- service role (edge function) bypass RLS อ่านได้ปกติอยู่แล้ว
 insert into email_config (id, gmail_app_password) values (1, '')
 on conflict (id) do nothing;
+
+-- เขียน gmail_app_password ได้ทางเดียวคือผ่านฟังก์ชันนี้ (SECURITY DEFINER = รันสิทธิ์เจ้าของฟังก์ชัน
+-- จึงไม่ติด RLS ของตาราง) — ยังคงอ่านค่ากลับไม่ได้เหมือนเดิม เพียงแต่ "เขียน" ทำได้แล้ว
+create or replace function set_email_app_password(new_password text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update email_config set gmail_app_password = new_password, updated_at = now() where id = 1;
+end;
+$$;
+revoke all on function set_email_app_password(text) from public;
+grant execute on function set_email_app_password(text) to anon, authenticated;
 
 -- ── ที่อยู่ Gmail ผู้ส่ง (ไม่ลับ — เก็บใน settings ที่มีอยู่แล้ว) ──
 insert into settings (key, value) values ('notify_gmail_address', 'jirawat.na@go.buu.ac.th')

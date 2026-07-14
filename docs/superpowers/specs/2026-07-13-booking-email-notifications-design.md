@@ -27,17 +27,24 @@ create table if not exists email_config (
   constraint singleton check (id = 1)
 );
 alter table email_config enable row level security;
--- ไม่มี select policy เลย — anon key อ่านค่านี้กลับไม่ได้เด็ดขาด
--- service role (edge function) bypass RLS อ่านได้ปกติ
-drop policy if exists "email_config: insert" on email_config;
-create policy "email_config: insert" on email_config for insert with check (true);
-drop policy if exists "email_config: update" on email_config;
-create policy "email_config: update" on email_config for update using (true);
+-- ไม่มี policy ใดๆ เลยบนตารางนี้โดยตรง — anon key แตะไม่ได้เลยทั้ง select/insert/update
 insert into email_config (id, gmail_app_password) values (1, '')
 on conflict (id) do nothing;
+
+-- เขียนรหัสผ่านได้ทางเดียวคือผ่านฟังก์ชันนี้ (SECURITY DEFINER = bypass RLS ของตาราง)
+create or replace function set_email_app_password(new_password text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  update email_config set gmail_app_password = new_password, updated_at = now() where id = 1;
+end;
+$$;
+revoke all on function set_email_app_password(text) from public;
+grant execute on function set_email_app_password(text) to anon, authenticated;
 ```
 
-ความเสี่ยงที่ยอมรับ: insert/update เปิดให้ anon key เขียนได้ (เหมือน pattern ของตาราง `approvers` ที่มีอยู่แล้ว — ระบบภายใน ไม่ได้ทำ Supabase Auth) แต่ **select ปิดสนิท** ต่างจาก `approvers` เพราะ App Password เป็นความลับภายนอกจริง (เข้าบัญชี Gmail จริงได้) ไม่ใช่แค่ hash ในระบบ
+**ทำไมไม่ใช้ RLS policy ตรง ๆ แบบตารางอื่น (approvers/settings):** ลองแล้วพบว่าใช้ไม่ได้จริง — PostgreSQL (ยืนยันบน PG 17 ของโปรเจกต์นี้) ต้องมองเห็นแถวก่อนถึงจะ `UPDATE` ได้ ถ้าตารางไม่มี select policy เลย แม้จะมี update policy เป็น `using (true)` ก็ยังจับคู่แถวไม่เจอ (ยืนยันด้วย `Content-Range: */0` และ `GET DIAGNOSTICS row_count` = 0 จริงบน production) ต่างจาก `approvers`/`settings` ที่มี select policy คู่กันอยู่แล้วจึงใช้ policy ตรงได้ปกติ — สำหรับตารางที่ต้อง "เขียนได้ อ่านไม่ได้เลย" แบบ email_config ต้องใช้ SECURITY DEFINER function แทน ไม่ใช่ policy ตรง ๆ
+
+ความเสี่ยงที่ยอมรับ: `execute` เปิดให้ anon key เรียกได้ (เหมือน pattern เดิมของ `approvers`/`settings` — ระบบภายใน ไม่ได้ทำ Supabase Auth) แต่**อ่านค่ากลับไม่ได้เด็ดขาด** เพราะไม่มี select policy/grant ใดๆ บนตารางเลย และฟังก์ชันก็ return void ไม่ส่งค่ากลับ
 
 ### ที่อยู่ Gmail (ไม่ลับ) → เก็บใน `settings` ที่มีอยู่แล้ว
 
@@ -83,7 +90,7 @@ on conflict (key) do update set value = excluded.value;
 
 - ช่องแสดง/แก้ไขที่อยู่ Gmail ผู้ส่ง — โหลดค่าเริ่มต้นจาก `settings.notify_gmail_address`
 - ช่อง App Password — เป็น password input, **ค่าเริ่มต้นว่างเปล่าเสมอ** (ไม่ดึงค่าเดิมมาแสดงเพราะอ่านไม่ได้อยู่แล้ว), placeholder อธิบายว่ากรอกเฉพาะตอนต้องการเปลี่ยน
-- ปุ่มบันทึก: upsert `settings.notify_gmail_address` เสมอ, upsert `email_config.gmail_app_password` เฉพาะเมื่อช่องรหัสผ่านไม่ว่าง
+- ปุ่มบันทึก: upsert `settings.notify_gmail_address` เสมอ, เรียก RPC `set_email_app_password(new_password)` เฉพาะเมื่อช่องรหัสผ่านไม่ว่าง
 
 ## Error handling / rollout
 
