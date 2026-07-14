@@ -3,6 +3,22 @@ import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts'
 
 type EmailEvent = 'submitted' | 'approved' | 'rejected'
 
+// denomailer's built-in quoted-printable encoder line-wraps by character count
+// without respecting multi-byte UTF-8 boundaries, corrupting Thai text in some
+// mail clients. Base64 has no such boundary issue, so we encode manually via
+// mimeContent instead of the content/html convenience fields.
+function toBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str)
+  let binary = ''
+  for (const b of bytes) binary += String.fromCharCode(b)
+  const b64 = btoa(binary)
+  return (b64.match(/.{1,76}/g) ?? [b64]).join('\r\n')
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 const MONTHS_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
 
 function thaiDate(dateStr: string): string {
@@ -42,11 +58,14 @@ function detailRows(b: BookingWithRoom): string {
 }
 
 function buildEmail(event: EmailEvent, b: BookingWithRoom): { subject: string; html: string } {
-  const roomName = b.rooms?.name ?? b.room_id
-
   if (event === 'submitted') {
     return {
-      subject: `[${b.booking_code}] ได้รับคำขอจองห้อง ${roomName} แล้ว — รอการอนุมัติ`,
+      // Subject must stay ASCII-only: denomailer's RFC2047 encoder corrupts
+      // non-ASCII subjects longer than ~74 encoded chars (upstream bug,
+      // https://github.com/EC-Nordbund/denomailer/issues/90). Thai room
+      // names easily exceed that, so use room_id here; full Thai detail
+      // stays in the HTML body below.
+      subject: `[${b.booking_code}] Booking request for ${b.room_id} received - pending approval`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
           <div style="background:#1e3a5f;padding:16px 24px;border-radius:8px 8px 0 0">
@@ -64,7 +83,7 @@ function buildEmail(event: EmailEvent, b: BookingWithRoom): { subject: string; h
 
   if (event === 'approved') {
     return {
-      subject: `[${b.booking_code}] การจองห้อง ${roomName} ได้รับการอนุมัติ`,
+      subject: `[${b.booking_code}] Booking for ${b.room_id} approved`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
           <div style="background:#1e3a5f;padding:16px 24px;border-radius:8px 8px 0 0">
@@ -85,7 +104,7 @@ function buildEmail(event: EmailEvent, b: BookingWithRoom): { subject: string; h
 
   // rejected
   return {
-    subject: `[${b.booking_code}] คำขอจองห้อง ${roomName} ถูกปฏิเสธ`,
+    subject: `[${b.booking_code}] Booking request for ${b.room_id} rejected`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
         <div style="background:#1e3a5f;padding:16px 24px;border-radius:8px 8px 0 0">
@@ -105,9 +124,8 @@ function buildEmail(event: EmailEvent, b: BookingWithRoom): { subject: string; h
 }
 
 function buildAdminNotifyEmail(b: BookingWithRoom): { subject: string; html: string } {
-  const roomName = b.rooms?.name ?? b.room_id
   return {
-    subject: `[${b.booking_code}] มีคำขอจองใหม่รอการอนุมัติ — ห้อง ${roomName}`,
+    subject: `[${b.booking_code}] New booking request pending approval - ${b.room_id}`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
         <div style="background:#1e3a5f;padding:16px 24px;border-radius:8px 8px 0 0">
@@ -194,8 +212,18 @@ Deno.serve(async (req) => {
         from: gmailAddress,
         to: msg.to,
         subject: msg.subject,
-        content: 'auto',
-        html: msg.html,
+        mimeContent: [
+          {
+            mimeType: 'text/plain; charset="utf-8"',
+            content: toBase64(stripHtml(msg.html)),
+            transferEncoding: 'base64',
+          },
+          {
+            mimeType: 'text/html; charset="utf-8"',
+            content: toBase64(msg.html),
+            transferEncoding: 'base64',
+          },
+        ],
       })
     }
     await client.close()
