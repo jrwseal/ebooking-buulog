@@ -119,6 +119,12 @@ create policy "bookings: insert pending" on bookings for insert
 alter table settings enable row level security;
 drop policy if exists "settings: read all" on settings;
 create policy "settings: read all" on settings for select using (true);
+-- insert/update เปิดให้ anon key เขียนได้ (เหมือน approvers/email_config — ระบบภายใน)
+-- จำเป็นสำหรับหน้าแอดมินแก้ไข notify_gmail_address ผ่านแอปได้เอง
+drop policy if exists "settings: insert" on settings;
+create policy "settings: insert" on settings for insert with check (true);
+drop policy if exists "settings: update" on settings;
+create policy "settings: update" on settings for update using (true);
 
 -- ── approvers ─────────────────────────────────────────────
 alter table approvers enable row level security;
